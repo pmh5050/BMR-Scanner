@@ -15,8 +15,8 @@
 &nbsp;&nbsp; 2) Square size : 30mm  
 &nbsp;&nbsp; 3) ArUco Marker Id :  
 ```
-1] H Board : 10
-2] V Board : 5
+H Board : 10
+V Board : 5
 ```
 
 ### Processor
