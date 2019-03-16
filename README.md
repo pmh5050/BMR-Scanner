@@ -1,6 +1,5 @@
 # Biomedical Robotics Lab - 3D Line Laser Scanner
 
-## Protocol
 ### Software
 ```
 1. Visual Studio 2017
