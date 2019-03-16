@@ -16,7 +16,7 @@
 3. ChArUco board
   1) Ratio : Square size/Marker size = 2  
   2) Square size : 30mm  
-  3) ArUco Marker Id :  
+  3) ArUco Marker Id
     1] H Board : 10
     2] V Board : 5
 ```
