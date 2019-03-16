@@ -13,7 +13,7 @@
 ```
 1. Webcam : Logitech C920 & C922r, Microsoft Life Cam
 2. LineLaser(Wave Length) : 650nm
-3. ChArUco board :  
+3. ChArUco board
   1) Ratio : Square size/Marker size = 2  
   2) Square size : 30mm  
   3) ArUco Marker Id :  
