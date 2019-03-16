@@ -26,3 +26,6 @@
 2. VGA : GTX1060 6GB
 3. RAM : 16GB
 ```
+
+### Point Cloud
+<img src="https://user-images.githubusercontent.com/38609785/54472606-52f46080-480e-11e9-9299-dd0fd5602779.png" width="50%"></img>
