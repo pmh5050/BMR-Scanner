@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 	Mat Frame;
 	Mat LaserFrame;
 	
+	
 	while (Scanner.ScanCamera->IsFrameReady())
 	{
 		// Visible behavior
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 			{
 				Scanner.SetObjectCheckerBoard('H');
 				Scanner.DetectCheckerBoard(Frame);
-				Scanner.DrawCheckerBoardAxis(Frame);
+				Scanner.DrawCheckerBoardAxis(Frame, EOffsetType::CenterPoint);
 				imshow("Frame", Frame);
 			}
 
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
 			{
 				Scanner.SetObjectCheckerBoard('V');
 				Scanner.DetectCheckerBoard(Frame);
-				Scanner.DrawCheckerBoardAxis(Frame);
+				Scanner.DrawCheckerBoardAxis(Frame, EOffsetType::CenterPoint);
 				imshow("Frame", Frame);
 			}
 

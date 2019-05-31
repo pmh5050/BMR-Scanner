@@ -107,7 +107,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox_2">
+      <widget class="QGroupBox" name="InformationGroup">
        <property name="title">
         <string>Information</string>
        </property>
@@ -133,6 +133,56 @@
          <widget class="QLabel" name="InfoLineLaser">
           <property name="text">
            <string>Line Laser</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="SerialGroup">
+       <property name="title">
+        <string>Serial</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QLabel" name="SerialStateLabel">
+          <property name="text">
+           <string>Connection dosen't exist</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="ComSelectLayout">
+          <item>
+           <widget class="QSpinBox" name="SerialChannel">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="ConnectButton">
+            <property name="text">
+             <string>Connect</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="UnitStepButton">
+          <property name="text">
+           <string>Unit Step</string>
           </property>
          </widget>
         </item>

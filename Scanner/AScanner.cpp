@@ -23,6 +23,8 @@
 #define RANGE_MINIMUM 0
 #define RANGE_MAXIMUM 1
 
+static ofstream StandardDevReport("NoiseCameraDev2.txt");
+
 AScanner::AScanner(int argc, char **argv)
 {
 	Application = new QApplication(argc, argv);
@@ -43,8 +45,14 @@ AScanner::AScanner(int argc, char **argv)
 	bIsHLineReady = false;
 	bIsVLineReady = false;
 	bIsScanDataReady = false;
+
+	UpdateCenterPoint();
 }
 
+AScanner::~AScanner()
+{
+	StandardDevReport.close();
+}
 /**
 * 검출의 대상이 되는 CheckerBoard를 설정합니다.
 * @param NewObjectCheckerBoardType - 'H'일 경우 H Checkerboard가 검출의 대상이 되며, 'V'일 경우 V Checkerboard가 검출의 대상이 됩니다.
@@ -91,8 +99,7 @@ void AScanner::DetectCheckerBoard(Mat& Frame)
 			// 여부를 확인받는 것과 동시에 Rotation matrix와 Translate matrix의 주소를 인자로 넣어서 값을 저장합니다.
 			
 			bIsValidPose = aruco::estimatePoseCharucoBoard(CharucoCorners, CharucoIds, ObjectCheckerBoard->Charucoboard, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs);
-			// aruco::estimatePoseCharucoBoard(CharucoCorners, CharucoIds, ObjectCheckerBoard->Charucoboard, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs);
-			
+
 			/*
 			Mat Ids(CharucoIds);
 
@@ -156,30 +163,50 @@ void AScanner::DrawCheckerBoardAxis(Mat& Frame)
 	// '자세 추정 성공 여부 변수'의 값이 참일 경우
 	if (bIsValidPose)
 	{
-		/*
-		// 축을 그립니다
-		Mat TransformCenterToOrigin = ScannerHelper->GetTransformCenterPointToOrigin(ObjectCheckerBoard);
-		Mat TransformOriginToCamera = ObjectCheckerBoard->GetTransformB2C();
-		Mat TransformCenterToCamera = TransformOriginToCamera * TransformCenterToOrigin;
+		// 축을 그립니다 
+		aruco::drawAxis(Frame, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs, ObjectCheckerBoard->AxisLength);
+	}
+}
 
-		double dRotationCenterToCamera[3][3];
-		double dTranslateCenterToCamera[3];		
-		for (int i = 0; i < 3; i++)
+/** Frame을 입력받아 검출한 CheckerBoard의 축을 Offset Option을 고려하여 표시합니다. */
+void AScanner::DrawCheckerBoardAxis(Mat& Frame, EOffsetType OffsetType)
+{
+	if (bIsValidPose)
+	{
+		switch (OffsetType)
 		{
-			double* TransformPtr = TransformCenterToCamera.ptr<double>(i);
-			for (int j = 0; j < 3; j++)
+		case EOffsetType::CenterPoint:
+		{
+			UpdateCheckerBoardTransformMatrix();
+			Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
+			/*
+			static double BaseYaw = AScannerHelper::CalYaw(AScannerHelper::GetRotationMatrix(TransformB2C));
+			double CurrentYaw = AScannerHelper::CalYaw(AScannerHelper::GetRotationMatrix(TransformB2C));
+			double DeltaYaw = (CurrentYaw - BaseYaw) * 180.0f / CV_PI;
+			cout << DeltaYaw << endl;
+			StandardDevReport << DeltaYaw << endl;
+			*/
+			Mat DeltaOffset = (TransformB2C * CenterPoint);
+			
+			double* OffsetPointer = DeltaOffset.ptr<double>(0);
+			for (int i = 0; i < 3; i++)
 			{
-				dRotationCenterToCamera[i][j] = TransformPtr[j];
+				vTrs[i] = OffsetPointer[i];
 			}
-			dTranslateCenterToCamera[i] = TransformPtr[3];
+			
+			break;
+		}
+			
+		case EOffsetType::None:
+		{
+			break;
+		}
+		default:
+			// ERROR
+			break;
 		}
 
-		Mat mRotation(3, 3, CV_64F, dRotationCenterToCamera);
-		Mat vRotation(3, 1, CV_64F);
-		Rodrigues(mRotation, vRotation);
-
-		Mat vTrans(1, 3, CV_64F, dTranslateCenterToCamera);
-		*/
+		// 축을 그립니다 
 		aruco::drawAxis(Frame, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs, ObjectCheckerBoard->AxisLength);
 	}
 }
@@ -368,10 +395,11 @@ void AScanner::ScanRunning()
 {
 	Mat CurrentFrame;
 	ScanCamera->GetFrame(CurrentFrame);
-
+	
 	if (!bIsScanDataReady)
 	{
 		cout << "Scan" << endl;		
+		UserInterface->TimerInit(1000);
 	}
 
 	SetObjectCheckerBoard('H');
@@ -379,23 +407,34 @@ void AScanner::ScanRunning()
 
 	if (bIsValidPose)
 	{
-		UpdateCheckerBoardTransformMatrix();
+		static bool bToggleFlagPrev = UserInterface->bToggleTableFlag;
+		bool bToggleFlagCurrent = UserInterface->bToggleTableFlag;
+		if (bToggleFlagPrev != bToggleFlagCurrent)
+		{
+#if ASCANNER_DEBUG
+			
+#endif
+			cout << "Capture!" << endl;
+			bToggleFlagPrev = bToggleFlagCurrent;
+			UserInterface->StepOnce();
+			UpdateCheckerBoardTransformMatrix();
 
-		ALinkedList* LinkedListPointer;
-		if (!bIsScanDataReady)
-		{
-			bIsScanDataReady = true;
-			LinkedListPointer = LinkedListHead;
+			ALinkedList* LinkedListPointer;
+			if (!bIsScanDataReady)
+			{
+				bIsScanDataReady = true;
+				LinkedListPointer = LinkedListHead;
+			}
+			else
+			{
+				LinkedListPointer = new ALinkedList();
+				LinkedListHead->InsertNextNode(LinkedListPointer);
+			}
+			AScanDataSet* ScanDataSet = LinkedListPointer->GetDataSetPtr();
+			Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
+			ScanDataSet->SetOrgImageData(CurrentFrame);
+			ScanDataSet->SetTransformB2C(TransformB2C);
 		}
-		else
-		{
-			LinkedListPointer = new ALinkedList();
-			LinkedListHead->InsertNextNode(LinkedListPointer);
-		}
-		AScanDataSet* ScanDataSet = LinkedListPointer->GetDataSetPtr();
-		Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
-		ScanDataSet->SetOrgImageData(CurrentFrame);
-		ScanDataSet->SetTransformB2C(TransformB2C);
 	}
 	else
 	{
@@ -511,7 +550,6 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 		Mat OptimalCenterPoint = AScannerHelper::CalOptimalCenterPointVector(LinkedListHead);
 		cout << "회전 중심 좌표 : " << OptimalCenterPoint << endl;
 		
-		UpdateCenterPoint();
 		UpdateOptimalPoint(OptimalCenterPoint);
 
 		cout << "Center Point in (x, y, z) : " <<  CenterPoint << endl;
@@ -536,7 +574,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 
 			imshow("Node Frame", NodeFrame);
 			imshow("Node Laser Frame", NodeLaserFrame);
-			// char Key = waitKey(1);
+			char Key = waitKey(1);
 
 			// AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint);
 			AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint, 8);

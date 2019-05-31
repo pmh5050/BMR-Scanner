@@ -1,6 +1,6 @@
 #include "AUserInterface.h"
 
-#define AUSERINTERFACE_DEBUG false
+#define AUSERINTERFACE_DEBUG true
 
 #define CAMERA_COORDINATE 0
 #define BOARD_COORDINATE 1
@@ -51,6 +51,21 @@ AUserInterface::AUserInterface(QWidget *parent)
 		ScanButtonGroup->addButton(UserInterfaceAccessor.ExportBox, 1);
 
 		QObject::connect(ScanButtonGroup, SIGNAL(buttonToggled(int, bool)), SLOT(ScanBoxSlot(int, bool)));
+	}
+
+	// Serial Port Group 구성
+	{
+		bIsSerialOpened = false;
+
+		SerialPort = new QSerialPort();
+		QObject::connect(UserInterfaceAccessor.ConnectButton, SIGNAL(released()), SLOT(SerialConnect()));
+		QObject::connect(UserInterfaceAccessor.UnitStepButton, SIGNAL(released()), SLOT(StepOnce()));
+	}
+
+	// Timer 구성
+	{
+		TimerHandler = new QTimer(this);
+		QObject::connect(TimerHandler, SIGNAL(timeout()), SLOT(ToggleTableFlag()));
 	}
 }
 
@@ -189,4 +204,87 @@ void AUserInterface::SetLaserPlane(Mat LaserPlaneParams)
 	}
 	LaserPlaneString.append("=0");
 	UserInterfaceAccessor.InfoLineLaser->setText(LaserPlaneString);
+}
+
+/** Serial Port를 선택한 Serial Channel에 Connect합니다. */
+void AUserInterface::SerialConnect()
+{
+	QString SerialPortString = QString("COM") + UserInterfaceAccessor.SerialChannel->text();
+	SerialPort->setPortName(SerialPortString);
+	SerialPort->setBaudRate(QSerialPort::Baud9600);
+	SerialPort->setDataBits(QSerialPort::Data8);
+	SerialPort->setParity(QSerialPort::NoParity);
+	SerialPort->setStopBits(QSerialPort::OneStop);
+	SerialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+	if (!SerialPort->open(QIODevice::ReadWrite))
+	{
+		bIsSerialOpened = false;
+	}
+	else
+	{
+		bIsSerialOpened = true;
+		UserInterfaceAccessor.SerialStateLabel->setText(SerialPortString + " was connected");
+	}
+}
+
+/** 현재 Serial Port가 열렸는지 유무를 확인합니다. */
+bool AUserInterface::IsSerialOpened()
+{
+	return bIsSerialOpened;
+}
+
+/** Timer가 Period(ms)마다 StepOnce 함수를 수행하게끔 설정합니다. */
+void AUserInterface::TimerInit(int PeriodMs)
+{
+	if (bIsTimerRunning == false)
+	{
+		TimerHandler->start(PeriodMs);
+		bIsTimerRunning = true;
+	}
+}
+
+/** Timer를 중지합니다. */
+void AUserInterface::TimerStop()
+{
+	if (bIsTimerRunning == true)
+	{
+		TimerHandler->stop();
+		bIsTimerRunning = false;
+	}
+}
+
+/** Serial Port에 1회 Step 신호를 전송합니다. */
+void AUserInterface::StepOnce()
+{
+	if (IsSerialOpened())
+	{
+		char SendData[] = "<X001!";
+		SendData[1] = 10;
+		SerialPort->write(SendData);
+	}
+	else
+	{
+#if AUSERINTERFACE_DEBUG == true
+		cout << "Serial Port가 연결되지 않았습니다." << endl;
+#endif
+	}
+}
+
+/** 현재 Timer가 동작하고 있는 지 유무를 반환합니다. */
+bool AUserInterface::IsTimerRunning()
+{
+	return bIsTimerRunning;
+}
+
+/** Table Flag를 반전합니다. */
+void AUserInterface::ToggleTableFlag()
+{
+	bToggleTableFlag = !bToggleTableFlag;
+	cout << bToggleTableFlag << endl;
+}
+
+AUserInterface::~AUserInterface()
+{
+	delete SerialPort;
 }

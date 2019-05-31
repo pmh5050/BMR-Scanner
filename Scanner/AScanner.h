@@ -12,13 +12,19 @@
 using namespace std;
 using namespace cv;
 
+enum EOffsetType : int;
+
 class AScanner
 {
 public:
 	AScanner(int argc, char **argv);
-
+	~AScanner();
 	/** Frame을 입력받아 검출한 CheckerBoard의 축을 표시합니다. */
 	void DrawCheckerBoardAxis(Mat& Frame);
+
+	/** Frame을 입력받아 검출한 CheckerBoard의 축을 Offset Option을 고려하여 표시합니다. */
+	void DrawCheckerBoardAxis(Mat& Frame, EOffsetType OffsetType);
+
 	/** Scan data로부터 Point Cloud 정보를 계산한 뒤 해당 FileName에 저장합니다 */
 	void StorePointCloud(string FileName);
 	/**

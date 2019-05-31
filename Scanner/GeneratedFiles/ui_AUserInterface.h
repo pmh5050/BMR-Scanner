@@ -15,6 +15,8 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpinBox>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -38,11 +40,18 @@ public:
     QCheckBox *UpdateVBoardBox;
     QCheckBox *UpdateLineLaserBox;
     QCheckBox *UpdateNoneBox;
-    QGroupBox *groupBox_2;
+    QGroupBox *InformationGroup;
     QVBoxLayout *verticalLayout_4;
     QLabel *InfoHBoard;
     QLabel *InfoVBoard;
     QLabel *InfoLineLaser;
+    QGroupBox *SerialGroup;
+    QVBoxLayout *verticalLayout_5;
+    QLabel *SerialStateLabel;
+    QHBoxLayout *ComSelectLayout;
+    QSpinBox *SerialChannel;
+    QPushButton *ConnectButton;
+    QPushButton *UnitStepButton;
     QHBoxLayout *BotLayout;
     QGroupBox *groupBox;
     QHBoxLayout *horizontalLayout;
@@ -127,30 +136,69 @@ public:
 
         TopLayout->addWidget(UpdateGroup);
 
-        groupBox_2 = new QGroupBox(AUserInterfaceClass);
-        groupBox_2->setObjectName(QString::fromUtf8("groupBox_2"));
-        groupBox_2->setAlignment(Qt::AlignCenter);
-        verticalLayout_4 = new QVBoxLayout(groupBox_2);
+        InformationGroup = new QGroupBox(AUserInterfaceClass);
+        InformationGroup->setObjectName(QString::fromUtf8("InformationGroup"));
+        InformationGroup->setAlignment(Qt::AlignCenter);
+        verticalLayout_4 = new QVBoxLayout(InformationGroup);
         verticalLayout_4->setSpacing(6);
         verticalLayout_4->setContentsMargins(11, 11, 11, 11);
         verticalLayout_4->setObjectName(QString::fromUtf8("verticalLayout_4"));
-        InfoHBoard = new QLabel(groupBox_2);
+        InfoHBoard = new QLabel(InformationGroup);
         InfoHBoard->setObjectName(QString::fromUtf8("InfoHBoard"));
 
         verticalLayout_4->addWidget(InfoHBoard);
 
-        InfoVBoard = new QLabel(groupBox_2);
+        InfoVBoard = new QLabel(InformationGroup);
         InfoVBoard->setObjectName(QString::fromUtf8("InfoVBoard"));
 
         verticalLayout_4->addWidget(InfoVBoard);
 
-        InfoLineLaser = new QLabel(groupBox_2);
+        InfoLineLaser = new QLabel(InformationGroup);
         InfoLineLaser->setObjectName(QString::fromUtf8("InfoLineLaser"));
 
         verticalLayout_4->addWidget(InfoLineLaser);
 
 
-        TopLayout->addWidget(groupBox_2);
+        TopLayout->addWidget(InformationGroup);
+
+        SerialGroup = new QGroupBox(AUserInterfaceClass);
+        SerialGroup->setObjectName(QString::fromUtf8("SerialGroup"));
+        SerialGroup->setAlignment(Qt::AlignCenter);
+        verticalLayout_5 = new QVBoxLayout(SerialGroup);
+        verticalLayout_5->setSpacing(6);
+        verticalLayout_5->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_5->setObjectName(QString::fromUtf8("verticalLayout_5"));
+        SerialStateLabel = new QLabel(SerialGroup);
+        SerialStateLabel->setObjectName(QString::fromUtf8("SerialStateLabel"));
+        SerialStateLabel->setAlignment(Qt::AlignCenter);
+
+        verticalLayout_5->addWidget(SerialStateLabel);
+
+        ComSelectLayout = new QHBoxLayout();
+        ComSelectLayout->setSpacing(6);
+        ComSelectLayout->setObjectName(QString::fromUtf8("ComSelectLayout"));
+        SerialChannel = new QSpinBox(SerialGroup);
+        SerialChannel->setObjectName(QString::fromUtf8("SerialChannel"));
+        SerialChannel->setAlignment(Qt::AlignCenter);
+        SerialChannel->setValue(3);
+
+        ComSelectLayout->addWidget(SerialChannel);
+
+        ConnectButton = new QPushButton(SerialGroup);
+        ConnectButton->setObjectName(QString::fromUtf8("ConnectButton"));
+
+        ComSelectLayout->addWidget(ConnectButton);
+
+
+        verticalLayout_5->addLayout(ComSelectLayout);
+
+        UnitStepButton = new QPushButton(SerialGroup);
+        UnitStepButton->setObjectName(QString::fromUtf8("UnitStepButton"));
+
+        verticalLayout_5->addWidget(UnitStepButton);
+
+
+        TopLayout->addWidget(SerialGroup);
 
 
         verticalLayout->addLayout(TopLayout);
@@ -201,10 +249,14 @@ public:
         UpdateVBoardBox->setText(QApplication::translate("AUserInterfaceClass", "Update V Board", nullptr));
         UpdateLineLaserBox->setText(QApplication::translate("AUserInterfaceClass", "Update Line Laser", nullptr));
         UpdateNoneBox->setText(QApplication::translate("AUserInterfaceClass", "Update None", nullptr));
-        groupBox_2->setTitle(QApplication::translate("AUserInterfaceClass", "Information", nullptr));
+        InformationGroup->setTitle(QApplication::translate("AUserInterfaceClass", "Information", nullptr));
         InfoHBoard->setText(QApplication::translate("AUserInterfaceClass", "H Board", nullptr));
         InfoVBoard->setText(QApplication::translate("AUserInterfaceClass", "V Board", nullptr));
         InfoLineLaser->setText(QApplication::translate("AUserInterfaceClass", "Line Laser", nullptr));
+        SerialGroup->setTitle(QApplication::translate("AUserInterfaceClass", "Serial", nullptr));
+        SerialStateLabel->setText(QApplication::translate("AUserInterfaceClass", "Connection dosen't exist", nullptr));
+        ConnectButton->setText(QApplication::translate("AUserInterfaceClass", "Connect", nullptr));
+        UnitStepButton->setText(QApplication::translate("AUserInterfaceClass", "Unit Step", nullptr));
         groupBox->setTitle(QApplication::translate("AUserInterfaceClass", "Scan", nullptr));
         ScanBox->setText(QApplication::translate("AUserInterfaceClass", "Scan", nullptr));
         ExportBox->setText(QApplication::translate("AUserInterfaceClass", "Export", nullptr));
