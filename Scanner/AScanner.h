@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include <QtWidgets/QApplication>
-#include "AUserInterface.h"
+
 
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/highgui.hpp>
@@ -72,8 +72,11 @@ public:
 	/** Pseudo Inverse의 결과를 인자로 받아서 현재 Checkerboard의 회전 중심좌표 값을 Update 합니다. */
 	void UpdateOptimalPoint(Mat NewOptimalPoint);
 
+	/** AScanner의 Linked List에 포함된 Data를 초기화합니다. */
+	void ClearScanData();
+
 	QApplication* Application;
-	AUserInterface* UserInterface;
+	class AUserInterface* UserInterface;
 
 	class AScanCamera* ScanCamera;
 	class ACheckerBoard* HCheckerBoard;

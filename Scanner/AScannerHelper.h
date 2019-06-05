@@ -106,6 +106,8 @@ public:
 	static Mat GetOffsetCoordinate(EOffsetType OffsetType, Mat Position, Mat CenterPointCoordinate, Mat OptimalPointCoordinate);
 	/** 배열의 주소 및 시작과 끝 Index를 받아서 해당 범위 내의 기대값을 계산 후 반환합니다. */
 	static double GetMeanDataOfArray(double DataArray[], int InitIndex, int EndIndex);
+	/** Plane Equation의 Parameter(ax + by + cz + d = 0)를 배열 형태로 받아서 Mat 형태로 반환합니다. */
+	static Mat GetPlaneParameter(double PlaneParameterArray[4]);
 
 	/** Constructor Helper funtion */
 

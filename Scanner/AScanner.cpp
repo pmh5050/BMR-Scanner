@@ -7,6 +7,7 @@
 #include "AScannerHelper.h"
 #include "ALinkedList.h"
 #include "AScanDataSet.h"
+#include "AUserInterface.h"
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -40,6 +41,7 @@ AScanner::AScanner(int argc, char **argv)
 	VCheckerBoard->ReadDetectorParameters(DETECTOR_PARAMETER_FILE_PATH);
 	
 	UserInterface->show();
+	UserInterface->SetScannerReference(this);
 
 	bIsValidPose = false; // 매 루프마다 초기화됩니다.
 	bIsHLineReady = false;
@@ -815,4 +817,12 @@ void AScanner::UpdateOptimalPoint(Mat NewOptimalPoint)
 	OptimalPoint = AScannerHelper::ArrayToMat(4, 1, OptimalPointArray).clone();
 
 	AScannerHelper::SquareArrayAllocateFree(4, 1, OptimalPointArray);
+}
+
+/** AScanner의 Linked List에 포함된 Data를 초기화합니다. */
+void AScanner::ClearScanData()
+{
+	LinkedListHead->DestroyNode();
+	LinkedListHead = new ALinkedList();
+	bIsScanDataReady = false;
 }

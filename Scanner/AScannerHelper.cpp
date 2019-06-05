@@ -857,3 +857,10 @@ double AScannerHelper::GetMeanDataOfArray(double DataArray[], int InitIndex, int
 	Expectation = Num / Den;
 	return Expectation;
 }
+
+/** Plane Equation의 Parameter(ax + by + cz + d = 0)를 배열 형태로 받아서 Mat 형태로 반환합니다. */
+Mat AScannerHelper::GetPlaneParameter(double PlaneParameterArray[4])
+{
+	Mat PlaneParameter(1, 4, CV_64F, PlaneParameterArray);
+	return PlaneParameter.clone();
+}

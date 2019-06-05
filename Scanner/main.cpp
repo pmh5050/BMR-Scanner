@@ -28,7 +28,8 @@ int main(int argc, char *argv[])
 		{
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_DEFAULT))
 			{
-				Scanner.ScanCamera->ShowFrame();
+				Scanner.ScanCamera->GetFrame(Frame);
+				Scanner.UserInterface->UpdateLabelFromFrame(ELabelType::RGBFrame, Frame);
 			}
 
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_H_BOARD))
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
 				Scanner.SetObjectCheckerBoard('H');
 				Scanner.DetectCheckerBoard(Frame);
 				Scanner.DrawCheckerBoardAxis(Frame, EOffsetType::CenterPoint);
-				imshow("Frame", Frame);
+				Scanner.UserInterface->UpdateLabelFromFrame(ELabelType::RGBFrame, Frame);
 			}
 
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_V_BOARD))
@@ -44,14 +45,14 @@ int main(int argc, char *argv[])
 				Scanner.SetObjectCheckerBoard('V');
 				Scanner.DetectCheckerBoard(Frame);
 				Scanner.DrawCheckerBoardAxis(Frame, EOffsetType::CenterPoint);
-				imshow("Frame", Frame);
+				Scanner.UserInterface->UpdateLabelFromFrame(ELabelType::RGBFrame, Frame);
 			}
 
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_LINE_LASER))
 			{
 				Scanner.ScanCamera->GetFrame(Frame);
-				LaserFrame = AScannerHelper::GetLineLaserFrame(Frame, Scanner.LineLaser->GetMinimumRedValueThreshold());
-				imshow("Laser Frame", LaserFrame);
+				LaserFrame = AScannerHelper::GetLineLaserFrame(Frame, Scanner.UserInterface->RedTh);
+				Scanner.UserInterface->UpdateLabelFromFrame(ELabelType::LaserFrame, LaserFrame);
 			}
 
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_CURSOR_POSITION))
@@ -159,7 +160,7 @@ int main(int argc, char *argv[])
 #if MAIN_DEBUG
 	cout << "생성하였던 Node들을 반납합니다." << endl;
 #endif
-	Scanner.LinkedListHead->DestroyNode();
+	// Scanner.LinkedListHead->DestroyNode();
 
 	cout << "Program이 정상적으로 종료되었습니다." << endl;
 
