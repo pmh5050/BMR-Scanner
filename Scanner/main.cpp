@@ -6,6 +6,8 @@
 #include "AScannerHelper.h"
 #include "ALinkedList.h"
 
+#include <QTime>
+
 #define MAIN_DEBUG false
 
 #define X_AXIS 0
@@ -15,15 +17,24 @@
 #define RANGE_MINIMUM 0
 #define RANGE_MAXIMUM 1
 
+QTime TimeMs;
+
 int main(int argc, char *argv[])
 {
 	AScanner Scanner(argc, argv);
 	Mat Frame;
 	Mat LaserFrame;
 	
+	TimeMs.start();
 	
 	while (Scanner.ScanCamera->IsFrameReady())
 	{
+		int Elpased = TimeMs.elapsed();
+		cout << "DeltaTime : " << Elpased << endl;
+		if (Elpased > 1000)
+		{
+			TimeMs.start();
+		}
 		// Visible behavior
 		{
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_DEFAULT))
