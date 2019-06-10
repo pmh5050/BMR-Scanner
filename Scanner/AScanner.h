@@ -39,6 +39,9 @@ public:
 	*/
 	void StorePointCloud(string FileName, double ScanVolume[3][2], int WindowSize);
 
+	/** Scan을 1회 진행합니다. (타이머를 수행하지 않습니다.) */
+	void ScanRunningUntilTimer();
+
 	/** Scan을 진행합니다. */
 	void ScanRunning();
 

@@ -5,7 +5,7 @@
 #include "ALineLaser.h"
 #include "AScannerHelper.h"
 
-#define AUSERINTERFACE_DEBUG false
+#define AUSERINTERFACE_DEBUG true
 
 #define CAMERA_COORDINATE 0
 #define BOARD_COORDINATE 1
@@ -88,6 +88,7 @@ AUserInterface::AUserInterface(QWidget *parent)
 	// Serial Port Group 구성
 	{
 		bIsSerialOpened = false;
+		StepCount = 0;
 
 		SerialPort = new QSerialPort();
 		QObject::connect(UserInterfaceAccessor.ConnectButton, SIGNAL(released()), SLOT(SerialConnect()));
@@ -97,7 +98,10 @@ AUserInterface::AUserInterface(QWidget *parent)
 	// Timer 구성
 	{
 		TimerHandler = new QTimer(this);
-		QObject::connect(TimerHandler, SIGNAL(timeout()), SLOT(ToggleTableFlag()));
+		bIsTimerRunning = false;
+
+		QObject::connect(TimerHandler, SIGNAL(timeout()), SLOT(StepOnce()));
+
 	}
 
 	// Calibration 구성
@@ -132,6 +136,22 @@ AUserInterface::AUserInterface(QWidget *parent)
 void AUserInterface::SetScannerReference(AScanner* ScannerReference)
 {
 	Scanner = ScannerReference;
+
+}
+
+/** TimeManager로 부터 Delta Time을 ms 단위로 반환합니다. */
+int AUserInterface::GetDeltaTime()
+{
+	int DeltaTime = TimeManager.elapsed();
+
+	return DeltaTime;
+}
+
+/** 현재까지 Step motor의 Step 횟수를 반환합니다. */
+int AUserInterface::GetStepCount()
+{
+
+	return StepCount;
 }
 
 /** Visible Box Widget의 활성화 정보가 변경될 경우 호출되며, 활성화 정보 변수를 수정합니다. */
@@ -304,6 +324,9 @@ void AUserInterface::TimerInit(int PeriodMs)
 {
 	if (bIsTimerRunning == false)
 	{
+#if AUSERINTERFACE_DEBUG == true
+		cout << "Timer Init!" << endl;
+#endif
 		TimerHandler->start(PeriodMs);
 		bIsTimerRunning = true;
 	}
@@ -324,9 +347,12 @@ void AUserInterface::StepOnce()
 {
 	if (IsSerialOpened())
 	{
+		TimeManager.start();
+
 		char SendData[] = "<X001!";
 		SendData[1] = 10;
 		SerialPort->write(SendData);
+		StepCount++;
 	}
 	else
 	{
@@ -536,6 +562,7 @@ void AUserInterface::ClearReferenceScanData()
 	if (Scanner != nullptr)
 	{
 		Scanner->ClearScanData();
+		StepCount = 0;
 	}
 }
 
@@ -545,6 +572,12 @@ void AUserInterface::ProcessingFromReferenceScanData()
 #if AUSERINTERFACE_DEBUG
 	cout << "(미구현) Draw OpenGL" << endl;
 #endif
+}
+
+/** Scanner의 초기 Transform 정보를 등록합니다. */
+void AUserInterface::InitializeScanTransform()
+{
+	
 }
 
 AUserInterface::~AUserInterface()

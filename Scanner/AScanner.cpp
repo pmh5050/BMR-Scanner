@@ -101,7 +101,7 @@ void AScanner::DetectCheckerBoard(Mat& Frame)
 			// 여부를 확인받는 것과 동시에 Rotation matrix와 Translate matrix의 주소를 인자로 넣어서 값을 저장합니다.
 			
 			bIsValidPose = aruco::estimatePoseCharucoBoard(CharucoCorners, CharucoIds, ObjectCheckerBoard->Charucoboard, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs);
-
+			
 			/*
 			Mat Ids(CharucoIds);
 
@@ -118,7 +118,7 @@ void AScanner::DetectCheckerBoard(Mat& Frame)
 				solvePnP(ObjPoints, CharucoCorners, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs);
 
 				// (수정) : bIsValidPose의 판단이 엄격하여, Marker의 개수를 통해 추정 유무를 판단하는 것으로 변경합니다.
-				// bIsValidPose = true;
+				bIsValidPose = true;
 			}
 			else
 			{
@@ -392,51 +392,66 @@ bool AScanner::IsScanDataReady()
 	return bIsScanDataReady;
 }
 
+/** Scan을 1회 진행합니다. (타이머를 수행하지 않습니다.) */
+void AScanner::ScanRunningUntilTimer()
+{
+	Mat CurrentFrame;
+	ScanCamera->GetFrame(CurrentFrame);
+	SetObjectCheckerBoard('H');
+	DetectCheckerBoard(CurrentFrame);
+
+}
+
 /** Scan을 진행합니다. */
 void AScanner::ScanRunning()
 {
 	Mat CurrentFrame;
+	const int TimeDelay = 3000;
+	const float ConfidenceFactor = 0.7f;
 	ScanCamera->GetFrame(CurrentFrame);
-	
-	if (!bIsScanDataReady)
-	{
-		cout << "Scan" << endl;		
-		UserInterface->TimerInit(1000);
-	}
-
 	SetObjectCheckerBoard('H');
 	DetectCheckerBoard(CurrentFrame);
 
-	if (bIsValidPose)
+	if (!bIsScanDataReady && bIsValidPose)
 	{
-		static bool bToggleFlagPrev = UserInterface->bToggleTableFlag;
-		bool bToggleFlagCurrent = UserInterface->bToggleTableFlag;
-		if (bToggleFlagPrev != bToggleFlagCurrent)
-		{
-#if ASCANNER_DEBUG
-			
-#endif
-			cout << "Capture!" << endl;
-			bToggleFlagPrev = bToggleFlagCurrent;
-			UserInterface->StepOnce();
-			UpdateCheckerBoardTransformMatrix();
+		cout << "Scan" << endl;
+		UserInterface->TimerInit(TimeDelay);
 
-			ALinkedList* LinkedListPointer;
-			if (!bIsScanDataReady)
-			{
-				bIsScanDataReady = true;
-				LinkedListPointer = LinkedListHead;
-			}
-			else
-			{
-				LinkedListPointer = new ALinkedList();
-				LinkedListHead->InsertNextNode(LinkedListPointer);
-			}
-			AScanDataSet* ScanDataSet = LinkedListPointer->GetDataSetPtr();
-			Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
-			ScanDataSet->SetOrgImageData(CurrentFrame);
-			ScanDataSet->SetTransformB2C(TransformB2C);
+	}
+
+	// 최초 1회 Measurment 검출 이후에는 Motion Model로도 Scan을 진행하게 끔 합니다.
+	int DeltaTime = UserInterface->GetDeltaTime();
+	if (bIsValidPose || (DeltaTime > TimeDelay * ConfidenceFactor))
+	{
+		UpdateCheckerBoardTransformMatrix();
+
+		ALinkedList* LinkedListPointer;
+		if (!bIsScanDataReady)
+		{
+			bIsScanDataReady = true;
+			LinkedListPointer = LinkedListHead;
 		}
+		else
+		{
+			LinkedListPointer = new ALinkedList();
+			LinkedListHead->InsertNextNode(LinkedListPointer);
+		}
+		AScanDataSet* ScanDataSet = LinkedListPointer->GetDataSetPtr();
+		Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
+		
+		int MarkerCount = MarkerIds.size();
+		int StepCount = UserInterface->GetStepCount();
+
+		cout << "DeltaTime : " << DeltaTime << endl;
+		cout << "MarkerCount : " << MarkerCount << endl;
+		cout << "StepCount : " << StepCount << endl;
+
+		ScanDataSet->SetOrgImageData(CurrentFrame);
+		ScanDataSet->SetTransformB2C(TransformB2C);
+		ScanDataSet->SetDeltaTimeMs(DeltaTime);
+		ScanDataSet->SetDetectedMarkerCount(MarkerCount);
+		ScanDataSet->SetStepCount(StepCount);
+
 	}
 	else
 	{

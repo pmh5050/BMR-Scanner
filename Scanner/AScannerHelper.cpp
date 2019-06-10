@@ -514,12 +514,31 @@ Mat AScannerHelper::CalOptimalCenterPointVector(ALinkedList* LinkedListHead)
 	AScanDataSet* NodeScanDataSet;
 	Mat TransformMatrix;
 	double* TransformPtr;
+
+	int PreviousStepCount = 0;
 	for (int i = 0; i < LinkedListLength; i++)
 	{
 		for (int row = 0; row < 3; row++) // i : 행
 		{
 			NodeScanDataSet = NodeLinkedList->GetDataSetPtr();
-			TransformMatrix = NodeScanDataSet->GetTransformB2C();
+
+			// Kalman Filter
+			int CurrentStepCount = NodeScanDataSet->GetStepCount();
+			int DeltaStepCount = CurrentStepCount - PreviousStepCount;
+			PreviousStepCount = CurrentStepCount;
+
+			if (NodeScanDataSet->GetDetectedMarkerCount() < 5) // Odometry Data가 우세함
+			{
+				Mat DeltaAngleMatrix = AScannerHelper::GetTurntableDeltaRotMatrix(DeltaStepCount);
+				TransformMatrix = TransformMatrix * DeltaAngleMatrix;
+				NodeScanDataSet->SetTransformB2C(TransformMatrix);
+			}
+			else // Measurement Data가 우세함
+			{
+				TransformMatrix = NodeScanDataSet->GetTransformB2C();
+			}
+
+			
 			TransformPtr = TransformMatrix.ptr<double>(row);
 			// A Matrix
 			for (int col = 0; col < 5; col++)
@@ -863,4 +882,35 @@ Mat AScannerHelper::GetPlaneParameter(double PlaneParameterArray[4])
 {
 	Mat PlaneParameter(1, 4, CV_64F, PlaneParameterArray);
 	return PlaneParameter.clone();
+}
+
+/** Step Count를 입력받아 Turntable의 Delta Rotation Matrix를 Mat 형태로 반환합니다. */
+Mat AScannerHelper::GetTurntableDeltaRotMatrix(int StepCount)
+{
+	const bool bIsCCWDirection = true;
+	const float DeltaAnglePerOneStep = 1.8f;
+	double** DeltaRotationArray;
+	
+	AScannerHelper::SquareArrayDynamicAllocate(4, 4, DeltaRotationArray);
+	
+	for (int Row = 0; Row < 4; Row++)
+	{
+		for (int Col = 0; Col < 4; Col++)
+		{
+			DeltaRotationArray[Row][Col] = 0.0f;
+		}
+	}
+	
+	DeltaRotationArray[0][0] = cos(DeltaAnglePerOneStep * StepCount);
+	DeltaRotationArray[0][1] = -sin(DeltaAnglePerOneStep * StepCount);
+	DeltaRotationArray[1][0] = sin(DeltaAnglePerOneStep * StepCount);
+	DeltaRotationArray[1][1] = cos(DeltaAnglePerOneStep * StepCount);
+	DeltaRotationArray[2][2] = 1.0f;
+
+	DeltaRotationArray[3][3] = 1.0f;
+
+	Mat TurntableDeltaRotMatrix = ArrayToMat(4, 4, DeltaRotationArray);
+	AScannerHelper::SquareArrayAllocateFree(4, 4, DeltaRotationArray);
+
+	return TurntableDeltaRotMatrix;
 }

@@ -79,3 +79,29 @@ bool AScanDataSet::IsReadyImgData()
 {
 	return bIsReadyImgData;
 }
+
+/** 현재 Node의 Image에서 인식된 Marker의 Count를 정수 형태로 저장합니다 */
+void AScanDataSet::SetDetectedMarkerCount(int NewDetectedMarkerCount)
+{
+	DetectedMarkerCount = NewDetectedMarkerCount;
+
+}
+
+/** 현재 Node의 Image에서 인식된 Marker의 Count를 정수 형태로 반환합니다 */
+int AScanDataSet::GetDetectedMarkerCount()
+{
+	return DetectedMarkerCount;
+
+}
+
+/** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 저장합니다 */
+void AScanDataSet::SetStepCount(int NewStepCount)
+{
+	StepCount = NewStepCount;
+}
+
+/** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 반환합니다 */
+int AScanDataSet::GetStepCount()
+{
+	return StepCount;
+}

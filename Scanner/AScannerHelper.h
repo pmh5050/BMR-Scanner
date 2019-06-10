@@ -108,6 +108,8 @@ public:
 	static double GetMeanDataOfArray(double DataArray[], int InitIndex, int EndIndex);
 	/** Plane Equation의 Parameter(ax + by + cz + d = 0)를 배열 형태로 받아서 Mat 형태로 반환합니다. */
 	static Mat GetPlaneParameter(double PlaneParameterArray[4]);
+	/** Step Count를 입력받아 Turntable의 Delta Rotation Matrix를 Mat 형태로 반환합니다. */
+	static Mat GetTurntableDeltaRotMatrix(int StepCount);
 
 	/** Constructor Helper funtion */
 

@@ -96,6 +96,7 @@ public:
     QPushButton *ScanDataClearButton;
     QCheckBox *ScanBox;
     QPushButton *ScanProcessingButton;
+    QPushButton *InitializeButton;
 
     void setupUi(QWidget *AUserInterfaceClass)
     {
@@ -472,7 +473,7 @@ public:
         ScanDataClearButton->setObjectName(QString::fromUtf8("ScanDataClearButton"));
         ScanDataClearButton->setMaximumSize(QSize(50, 16777215));
 
-        gridLayout_4->addWidget(ScanDataClearButton, 0, 1, 1, 1);
+        gridLayout_4->addWidget(ScanDataClearButton, 0, 2, 1, 1);
 
         ScanBox = new QCheckBox(groupBox);
         ScanBox->setObjectName(QString::fromUtf8("ScanBox"));
@@ -484,7 +485,13 @@ public:
         ScanProcessingButton->setObjectName(QString::fromUtf8("ScanProcessingButton"));
         ScanProcessingButton->setMaximumSize(QSize(80, 16777215));
 
-        gridLayout_4->addWidget(ScanProcessingButton, 0, 2, 1, 1);
+        gridLayout_4->addWidget(ScanProcessingButton, 0, 3, 1, 1);
+
+        InitializeButton = new QPushButton(groupBox);
+        InitializeButton->setObjectName(QString::fromUtf8("InitializeButton"));
+        InitializeButton->setMaximumSize(QSize(60, 16777215));
+
+        gridLayout_4->addWidget(InitializeButton, 0, 1, 1, 1);
 
 
         horizontalLayout->addLayout(gridLayout_4);
@@ -551,6 +558,7 @@ public:
         ScanDataClearButton->setText(QApplication::translate("AUserInterfaceClass", "Clear", nullptr));
         ScanBox->setText(QApplication::translate("AUserInterfaceClass", "Scan", nullptr));
         ScanProcessingButton->setText(QApplication::translate("AUserInterfaceClass", "Processing", nullptr));
+        InitializeButton->setText(QApplication::translate("AUserInterfaceClass", "Initialize", nullptr));
     } // retranslateUi
 
 };

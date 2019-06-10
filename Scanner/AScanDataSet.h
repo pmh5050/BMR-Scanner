@@ -34,6 +34,15 @@ public:
 	Mat GetTransformB2C();
 	/** 현재 Node가 Image 정보를 갖고 있는지 유무를 반환합니다 */
 	bool IsReadyImgData();
+	/** 현재 Node의 Image에서 인식된 Marker의 Count를 정수 형태로 저장합니다 */
+	void SetDetectedMarkerCount(int NewDetectedMarkerCount);
+	/** 현재 Node의 Image에서 인식된 Marker의 Count를 정수 형태로 반환합니다 */
+	int GetDetectedMarkerCount();
+
+	/** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 저장합니다 */
+	void SetStepCount(int NewStepCount);
+	/** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 반환합니다 */
+	int GetStepCount();
 
 private:
 	float DeltaAngle; // 현재 frame의 회전각을 저장할 변수
@@ -41,5 +50,6 @@ private:
 	Mat OrgImageData; // 현재 frame의 Image 정보를 저장할 변수
 	bool bIsReadyImgData; // 현재 Node가 Image 정보를 갖고 있는지 유무를 저장할 변수
 	Mat TransformB2C; // 현재 Node의 Frame이 갖고있는 B2C Transform matrix
-
+	int DetectedMarkerCount; // 현재 Node의 Image에서 인식된 Marker의 Count를 저장할 변수
+	int StepCount; // 현재 Node에서 Step motor가 Step한 횟수를 저장할 변수
 };

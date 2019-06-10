@@ -4,6 +4,7 @@
 #include <QtWidgets/qbuttongroup.h>
 #include <QtSerialPort/qserialport.h>
 #include <QTimer>
+#include <QTime>
 #include <QFileDialog>
 
 #include "ui_AUserInterface.h"
@@ -63,6 +64,12 @@ public:
 
 	/** AScanner의 포인터를 받아 참조 변수에 등록합니다. */
 	void SetScannerReference(AScanner* ScannerReference);
+
+	/** TimeManager로 부터 Delta Time을 ms 단위로 반환합니다. */
+	int GetDeltaTime();
+
+	/** 현재까지 Step motor의 Step 횟수를 반환합니다. */
+	int GetStepCount();
 
 public slots:
 	/** Visible Box Widget의 활성화 정보가 변경될 경우 호출되며, 활성화 정보 변수를 수정합니다. */
@@ -133,6 +140,8 @@ public slots:
 	/** Reference의 Scan Data를 Processing하여 Draw합니다. */
 	void ProcessingFromReferenceScanData();
 	
+	/** Scanner의 초기 Transform 정보를 등록합니다. */
+	void InitializeScanTransform();
 private:
 	AScanner* Scanner; // AScanner의 주소를 보관할 Reference 변수
 	QButtonGroup* VisibleButtonGroup; // Visible Button들을 관리할 Button Group Pointer
@@ -140,6 +149,7 @@ private:
 	QButtonGroup* ScanButtonGroup; // Scan Button들을 관리할 Button Group Pointer
 
 	QTimer* TimerHandler; // 타이머 Handler
+	QTime TimeManager; // Time Manager
 	QSerialPort* SerialPort; // Arduino Uno와 통신할 Serial Port Handler
 
 	QString CameraCalibrationPath; // Camera Calibration Path를 저장할 변수
@@ -147,7 +157,9 @@ private:
 
 	bool bIsSerialOpened; // 현재 Serial Port가 열렸는지 유무를 저장할 변수
 
-	bool bIsTimerRunning; // 현재 Timer가 동작하고 있는지 유무를 저장할 변수	
+	bool bIsTimerRunning; // 현재 Timer가 동작하고 있는지 유무를 저장할 변수
+
+	int StepCount; // 현재까지 Step motor의 Step 횟수를 저장할 변수
 public:
 
 	bool bToggleTableFlag;

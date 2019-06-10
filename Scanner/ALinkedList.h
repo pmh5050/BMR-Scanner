@@ -1,6 +1,6 @@
 #pragma once
 
-#define ALINKEDLIST_DEBUG true;
+#define ALINKEDLIST_DEBUG false;
 
 class ALinkedList
 {
