@@ -806,20 +806,26 @@ Mat AScannerHelper::CalOptimalTransformMatrixUseKF(Mat CenterPoint, class AScanD
 	double CurrentMeasurementSTD = AScannerHelper::CalMeasurementSTD(ScanDataSet->GetDetectedMarkerCount(), MeasurementCC);
 
 	// Odometry Data
-	EstDeltaAngle = EstDeltaAngle + ScanDataSet->GetDeltaStepCount() * CV_PI / 180.0f;
+	EstDeltaAngle = EstDeltaAngle + 1.8f * ScanDataSet->GetDeltaStepCount() * CV_PI / 100.0f;
 	EstError = EstError + CurrentOdometrySTD;
 
 	double KalmanGain = AScannerHelper::CalKalmanGain(CurrentOdometrySTD, CurrentMeasurementSTD);
 
 	// Measurement Data
 	Mat DeltaAngleRotationMatrix = AScannerHelper::CalDeltaAngleMatrix(PivotRotationMatrix, ObjectRotationMatrix);
-	double MeasurmentDeltaAngle = AScannerHelper::CalYaw(DeltaAngleRotationMatrix);
+	double MeasurmentDeltaAngle = AScannerHelper::CalRotationAngle(DeltaAngleRotationMatrix);
 
 	EstDeltaAngle = EstDeltaAngle + KalmanGain * (MeasurmentDeltaAngle - EstDeltaAngle);
 	EstError = (1.0f - KalmanGain) * EstError;
 
-	Mat OptimalTranslateMatrix = DeltaAngleRotationMatrix * (PivotTranslateMatrix - CenterPointInBoardCoordinate) + CenterPointInBoardCoordinate; // Camera to O
-	Mat OptimalTransformMatrix = AScannerHelper::GetTransformMatrix(DeltaAngleRotationMatrix * PivotRotationMatrix.inv(), OptimalTranslateMatrix); // Camera to O
+	Mat EstDeltaAngleRotationMatrix = AScannerHelper::GetYawMatrix(EstDeltaAngle);
+#if ASCAANERHELPER_DEBUG
+	cout << "Est delta angle : " << EstDeltaAngle << endl;
+#endif
+	cout << "Est delta angle : " << EstDeltaAngle << endl;
+
+	Mat OptimalTranslateMatrix = EstDeltaAngleRotationMatrix * (PivotTranslateMatrix - CenterPointInBoardCoordinate) + CenterPointInBoardCoordinate; // Camera to O
+	Mat OptimalTransformMatrix = AScannerHelper::GetTransformMatrix(EstDeltaAngleRotationMatrix * PivotRotationMatrix.inv(), OptimalTranslateMatrix); // Camera to O
 
 	return OptimalTransformMatrix.clone(); // Camera To O
 }
@@ -840,7 +846,10 @@ Mat AScannerHelper::CalDeltaAngleMatrix(Mat PivotRotationMatrix, Mat ObjectRotat
 	return DeltaAngleRotationMatrix.clone();
 }
 
-/** 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다. */
+/**
+* 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다.
+* @param ObjectRotationMatrix - TransformB2C의 Rotation matrix에 해당합니다.
+*/
 double AScannerHelper::CalYaw(Mat ObjectRotationMatrix)
 {
 	// ObjectTransformMatrix의 경우 Board To Camera Transform matrix라 가정
@@ -857,6 +866,17 @@ double AScannerHelper::CalYaw(Mat ObjectRotationMatrix)
 	double CurrentYaw = atan2(dPivotHorizontalVector[1], dPivotHorizontalVector[0]) + CV_PI;
 
 	return CurrentYaw;
+}
+
+/**
+* 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다.
+* @param ObjectRotationMatrix - Z축에 대한 회전 변환 행렬(3x3)입니다.
+*/
+double AScannerHelper::CalRotationAngle(Mat ObjectRotationMatrix)
+{
+	double* MatPointer = ObjectRotationMatrix.ptr<double>(0);
+	double RotationAngle = atan2(-MatPointer[1], MatPointer[0]);
+	return RotationAngle;
 }
 
 /** Transform matrix를 입력받아 Rotation matrix를 반환합니다. */
@@ -1083,6 +1103,7 @@ Mat AScannerHelper::GetYawMatrix(double YawAngle)
 	dDeltaRotationMatrix[1][1] = cos(YawAngle);
 
 	dDeltaRotationMatrix[2][2] = 1.0f;
+
 	Mat DeltaAngleRotationMatrix = AScannerHelper::ArrayToMat(3, 3, dDeltaRotationMatrix);
 	AScannerHelper::SquareArrayAllocateFree(3, 3, dDeltaRotationMatrix);
 	return DeltaAngleRotationMatrix.clone();
@@ -1094,7 +1115,7 @@ double AScannerHelper::CalOdometrySTD(int DeltaTime, double OdometryCC)
 	const double SettlingTimeSTD = 0.1f;
 	const int SettlingTime = 700;
 
-	double DecayPower = -OdometryCC * (DeltaTime - SettlingTime);
+	double DecayPower = - (OdometryCC * (DeltaTime - SettlingTime)) / (double) SettlingTime;
 	return SettlingTimeSTD * exp(DecayPower);
 }
 
@@ -1106,7 +1127,7 @@ double AScannerHelper::CalMeasurementSTD(int DetectedMarker, double MeasurementC
 
 	if (DetectedMarker >= ThresholdMarkerNumber)
 	{
-		double DecayPower = -MeasurementCC * (DetectedMarker - ThresholdMarkerNumber);
+		double DecayPower = - (MeasurementCC * (DetectedMarker - ThresholdMarkerNumber)) / (double) ThresholdMarkerNumber;
 		return ThresholdSTD * exp(DecayPower);
 	}
 	else
@@ -1119,7 +1140,7 @@ double AScannerHelper::CalMeasurementSTD(int DetectedMarker, double MeasurementC
 double AScannerHelper::CalKalmanGain(double OdometrySTD, double MeasurementSTD)
 {
 	double KalmanGain;
-	if (MeasurementSTD != -1.0f) // Measurement data가 측정된 경우
+	if (MeasurementSTD > 0.0f) // Measurement data가 측정된 경우
 	{
 		KalmanGain = OdometrySTD / (OdometrySTD + MeasurementSTD);
 

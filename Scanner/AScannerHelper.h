@@ -101,8 +101,16 @@ public:
 
 	/** Pivot rotation matrix로 부터 Object rotation matrix까지의 Z축만의 회전 변환 행렬을 반환합니다. */
 	static Mat CalDeltaAngleMatrix(Mat PivotRotationMatrix, Mat ObjectRotationMatrix);
-	/** 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다. */
+	/** 
+	* 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다. 
+	* @param ObjectRotationMatrix - TransformB2C의 Rotation matrix에 해당합니다.
+	*/
 	static double CalYaw(Mat ObjectRotationMatrix);
+	/** 
+	* 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다. 
+	* @param ObjectRotationMatrix - Z축에 대한 회전 변환 행렬(3x3)입니다.
+	*/
+	static double CalRotationAngle(Mat ObjectRotationMatrix);
 	/** Transform matrix를 입력받아 Rotation matrix를 반환합니다. */
 	static Mat GetRotationMatrix(Mat TransformMatrix);
 	/** Transform matrix를 입력받아 Translate matrix를 반환합니다. */

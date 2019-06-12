@@ -39,6 +39,10 @@ int main(int argc, char *argv[])
 				Scanner.DetectCheckerBoard(Frame);
 				Scanner.DrawCheckerBoardAxis(Frame, EOffsetType::CenterPoint);
 				Scanner.UserInterface->UpdateLabelFromFrame(ELabelType::RGBFrame, Frame);
+
+				Scanner.UpdateCheckerBoardTransformMatrix();
+				cout << "YAW : " << Scanner.GetYawAngle() << endl;
+
 			}
 
 			if (Scanner.UserInterface->VisibleBoxInfo & (1 << VISIBLE_V_BOARD))
@@ -151,7 +155,7 @@ int main(int argc, char *argv[])
 		ScanVolume[Z_AXIS][RANGE_MINIMUM] = 0.0015f;
 		ScanVolume[Z_AXIS][RANGE_MAXIMUM] = 0.100f;
 
-		Scanner.StorePointCloud("KFPointCloud.txt", ScanVolume, 1);
+		Scanner.StorePointCloud("KFPointCloud.txt", ScanVolume, 3);
 		cout << "모든 연산이 완료되었습니다." << endl;
 	}
 	else

@@ -119,8 +119,8 @@ AUserInterface::AUserInterface(QWidget *parent)
 		WindowSize = 1;
 		LimitXY = 1.0f;
 		LimitZ = 1.0f;
-		OdometryCC = 0.0f;
-		MeasurementCC = 1.0f;
+		OdometryCC = 0.1f;
+		MeasurementCC = 0.01f;
 
 		QObject::connect(UserInterfaceAccessor.RThSpinBox, SIGNAL(valueChanged(int)), SLOT(UpdateRedThreshold(int)));
 		QObject::connect(UserInterfaceAccessor.WSizeSpinBox, SIGNAL(valueChanged(int)), SLOT(UpdateWindowSize(int)));

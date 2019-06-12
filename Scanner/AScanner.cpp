@@ -853,3 +853,16 @@ void AScanner::ClearScanData()
 	LinkedListHead = new ALinkedList();
 	bIsScanDataReady = false;
 }
+
+/** 현재 Object Checkerboard의 Yaw angle을 반환합니다. */
+double AScanner::GetYawAngle()
+{
+	if (bIsValidPose)
+	{
+		Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
+		Mat RotationB2C = AScannerHelper::GetRotationMatrix(TransformB2C);
+		return AScannerHelper::CalYaw(RotationB2C);
+	}
+	
+	return 0.0f;
+}

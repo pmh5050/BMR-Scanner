@@ -78,6 +78,9 @@ public:
 	/** AScanner의 Linked List에 포함된 Data를 초기화합니다. */
 	void ClearScanData();
 
+	/** 현재 Object Checkerboard의 Yaw angle을 반환합니다. */
+	double GetYawAngle();
+
 	QApplication* Application;
 	class AUserInterface* UserInterface;
 

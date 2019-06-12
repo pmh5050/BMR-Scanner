@@ -75,22 +75,22 @@ public:
     QHBoxLayout *horizontalLayout;
     QGroupBox *groupBox_5;
     QGridLayout *gridLayout_2;
-    QLabel *label;
     QSpinBox *RThSpinBox;
-    QSlider *LimXYSlider;
-    QSlider *LimZSlider;
-    QLabel *LimXYText;
     QLabel *label_8;
-    QSpinBox *WSizeSpinBox;
-    QLabel *LimZText;
-    QLabel *label_4;
-    QLabel *label_3;
-    QLabel *label_7;
-    QLabel *label_2;
-    QSlider *OdoCCSlider;
+    QLabel *label;
+    QSlider *LimXYSlider;
+    QLabel *LimXYText;
     QSlider *MeaCCSlider;
-    QLabel *OdoCCText;
+    QLabel *label_3;
+    QLabel *label_2;
+    QSpinBox *WSizeSpinBox;
+    QSlider *LimZSlider;
+    QLabel *label_4;
+    QLabel *LimZText;
     QLabel *MeaCCText;
+    QLabel *OdoCCText;
+    QLabel *label_7;
+    QSlider *OdoCCSlider;
     QGridLayout *gridLayout_4;
     QCheckBox *ExportBox;
     QPushButton *ScanDataClearButton;
@@ -351,12 +351,6 @@ public:
         gridLayout_2->setSpacing(6);
         gridLayout_2->setContentsMargins(11, 11, 11, 11);
         gridLayout_2->setObjectName(QString::fromUtf8("gridLayout_2"));
-        label = new QLabel(groupBox_5);
-        label->setObjectName(QString::fromUtf8("label"));
-        label->setMaximumSize(QSize(100, 16777215));
-
-        gridLayout_2->addWidget(label, 4, 0, 1, 1);
-
         RThSpinBox = new QSpinBox(groupBox_5);
         RThSpinBox->setObjectName(QString::fromUtf8("RThSpinBox"));
         RThSpinBox->setMaximumSize(QSize(150, 16777215));
@@ -366,6 +360,18 @@ public:
 
         gridLayout_2->addWidget(RThSpinBox, 0, 1, 1, 1);
 
+        label_8 = new QLabel(groupBox_5);
+        label_8->setObjectName(QString::fromUtf8("label_8"));
+        label_8->setMaximumSize(QSize(100, 16777215));
+
+        gridLayout_2->addWidget(label_8, 1, 0, 1, 1);
+
+        label = new QLabel(groupBox_5);
+        label->setObjectName(QString::fromUtf8("label"));
+        label->setMaximumSize(QSize(100, 16777215));
+
+        gridLayout_2->addWidget(label, 4, 0, 1, 1);
+
         LimXYSlider = new QSlider(groupBox_5);
         LimXYSlider->setObjectName(QString::fromUtf8("LimXYSlider"));
         LimXYSlider->setMaximumSize(QSize(300, 16777215));
@@ -373,24 +379,31 @@ public:
 
         gridLayout_2->addWidget(LimXYSlider, 2, 1, 1, 1);
 
-        LimZSlider = new QSlider(groupBox_5);
-        LimZSlider->setObjectName(QString::fromUtf8("LimZSlider"));
-        LimZSlider->setMaximumSize(QSize(300, 16777215));
-        LimZSlider->setOrientation(Qt::Horizontal);
-
-        gridLayout_2->addWidget(LimZSlider, 3, 1, 1, 1);
-
         LimXYText = new QLabel(groupBox_5);
         LimXYText->setObjectName(QString::fromUtf8("LimXYText"));
         LimXYText->setMaximumSize(QSize(50, 16777215));
 
         gridLayout_2->addWidget(LimXYText, 2, 2, 1, 1);
 
-        label_8 = new QLabel(groupBox_5);
-        label_8->setObjectName(QString::fromUtf8("label_8"));
-        label_8->setMaximumSize(QSize(100, 16777215));
+        MeaCCSlider = new QSlider(groupBox_5);
+        MeaCCSlider->setObjectName(QString::fromUtf8("MeaCCSlider"));
+        MeaCCSlider->setMaximumSize(QSize(300, 16777215));
+        MeaCCSlider->setValue(1);
+        MeaCCSlider->setOrientation(Qt::Horizontal);
 
-        gridLayout_2->addWidget(label_8, 1, 0, 1, 1);
+        gridLayout_2->addWidget(MeaCCSlider, 5, 1, 1, 1);
+
+        label_3 = new QLabel(groupBox_5);
+        label_3->setObjectName(QString::fromUtf8("label_3"));
+        label_3->setMaximumSize(QSize(100, 16777215));
+
+        gridLayout_2->addWidget(label_3, 3, 0, 1, 1);
+
+        label_2 = new QLabel(groupBox_5);
+        label_2->setObjectName(QString::fromUtf8("label_2"));
+        label_2->setMaximumSize(QSize(100, 16777215));
+
+        gridLayout_2->addWidget(label_2, 5, 0, 1, 1);
 
         WSizeSpinBox = new QSpinBox(groupBox_5);
         WSizeSpinBox->setObjectName(QString::fromUtf8("WSizeSpinBox"));
@@ -400,11 +413,12 @@ public:
 
         gridLayout_2->addWidget(WSizeSpinBox, 1, 1, 1, 1);
 
-        LimZText = new QLabel(groupBox_5);
-        LimZText->setObjectName(QString::fromUtf8("LimZText"));
-        LimZText->setMaximumSize(QSize(50, 16777215));
+        LimZSlider = new QSlider(groupBox_5);
+        LimZSlider->setObjectName(QString::fromUtf8("LimZSlider"));
+        LimZSlider->setMaximumSize(QSize(300, 16777215));
+        LimZSlider->setOrientation(Qt::Horizontal);
 
-        gridLayout_2->addWidget(LimZText, 3, 2, 1, 1);
+        gridLayout_2->addWidget(LimZSlider, 3, 1, 1, 1);
 
         label_4 = new QLabel(groupBox_5);
         label_4->setObjectName(QString::fromUtf8("label_4"));
@@ -412,11 +426,23 @@ public:
 
         gridLayout_2->addWidget(label_4, 2, 0, 1, 1);
 
-        label_3 = new QLabel(groupBox_5);
-        label_3->setObjectName(QString::fromUtf8("label_3"));
-        label_3->setMaximumSize(QSize(100, 16777215));
+        LimZText = new QLabel(groupBox_5);
+        LimZText->setObjectName(QString::fromUtf8("LimZText"));
+        LimZText->setMaximumSize(QSize(50, 16777215));
 
-        gridLayout_2->addWidget(label_3, 3, 0, 1, 1);
+        gridLayout_2->addWidget(LimZText, 3, 2, 1, 1);
+
+        MeaCCText = new QLabel(groupBox_5);
+        MeaCCText->setObjectName(QString::fromUtf8("MeaCCText"));
+        MeaCCText->setMaximumSize(QSize(50, 16777215));
+
+        gridLayout_2->addWidget(MeaCCText, 5, 2, 1, 1);
+
+        OdoCCText = new QLabel(groupBox_5);
+        OdoCCText->setObjectName(QString::fromUtf8("OdoCCText"));
+        OdoCCText->setMaximumSize(QSize(50, 16777215));
+
+        gridLayout_2->addWidget(OdoCCText, 4, 2, 1, 1);
 
         label_7 = new QLabel(groupBox_5);
         label_7->setObjectName(QString::fromUtf8("label_7"));
@@ -425,37 +451,13 @@ public:
 
         gridLayout_2->addWidget(label_7, 0, 0, 1, 1);
 
-        label_2 = new QLabel(groupBox_5);
-        label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setMaximumSize(QSize(100, 16777215));
-
-        gridLayout_2->addWidget(label_2, 5, 0, 1, 1);
-
         OdoCCSlider = new QSlider(groupBox_5);
         OdoCCSlider->setObjectName(QString::fromUtf8("OdoCCSlider"));
         OdoCCSlider->setMaximumSize(QSize(300, 16777215));
+        OdoCCSlider->setValue(10);
         OdoCCSlider->setOrientation(Qt::Horizontal);
 
         gridLayout_2->addWidget(OdoCCSlider, 4, 1, 1, 1);
-
-        MeaCCSlider = new QSlider(groupBox_5);
-        MeaCCSlider->setObjectName(QString::fromUtf8("MeaCCSlider"));
-        MeaCCSlider->setMaximumSize(QSize(300, 16777215));
-        MeaCCSlider->setOrientation(Qt::Horizontal);
-
-        gridLayout_2->addWidget(MeaCCSlider, 5, 1, 1, 1);
-
-        OdoCCText = new QLabel(groupBox_5);
-        OdoCCText->setObjectName(QString::fromUtf8("OdoCCText"));
-        OdoCCText->setMaximumSize(QSize(50, 16777215));
-
-        gridLayout_2->addWidget(OdoCCText, 4, 2, 1, 1);
-
-        MeaCCText = new QLabel(groupBox_5);
-        MeaCCText->setObjectName(QString::fromUtf8("MeaCCText"));
-        MeaCCText->setMaximumSize(QSize(50, 16777215));
-
-        gridLayout_2->addWidget(MeaCCText, 5, 2, 1, 1);
 
 
         horizontalLayout->addWidget(groupBox_5);
@@ -544,16 +546,16 @@ public:
         UnitStepButton->setText(QApplication::translate("AUserInterfaceClass", "Unit Step", nullptr));
         groupBox->setTitle(QApplication::translate("AUserInterfaceClass", "Scan", nullptr));
         groupBox_5->setTitle(QApplication::translate("AUserInterfaceClass", "Hyper Parameter", nullptr));
+        label_8->setText(QApplication::translate("AUserInterfaceClass", "Window Size", nullptr));
         label->setText(QApplication::translate("AUserInterfaceClass", "Odometry CC", nullptr));
         LimXYText->setText(QApplication::translate("AUserInterfaceClass", "0", nullptr));
-        label_8->setText(QApplication::translate("AUserInterfaceClass", "Window Size", nullptr));
-        LimZText->setText(QApplication::translate("AUserInterfaceClass", "0", nullptr));
-        label_4->setText(QApplication::translate("AUserInterfaceClass", "Limit XY", nullptr));
         label_3->setText(QApplication::translate("AUserInterfaceClass", "Limit Z", nullptr));
-        label_7->setText(QApplication::translate("AUserInterfaceClass", "Red Threshold", nullptr));
         label_2->setText(QApplication::translate("AUserInterfaceClass", "Measurement CC", nullptr));
-        OdoCCText->setText(QApplication::translate("AUserInterfaceClass", "0", nullptr));
-        MeaCCText->setText(QApplication::translate("AUserInterfaceClass", "0", nullptr));
+        label_4->setText(QApplication::translate("AUserInterfaceClass", "Limit XY", nullptr));
+        LimZText->setText(QApplication::translate("AUserInterfaceClass", "0", nullptr));
+        MeaCCText->setText(QApplication::translate("AUserInterfaceClass", "0.01", nullptr));
+        OdoCCText->setText(QApplication::translate("AUserInterfaceClass", "0.1", nullptr));
+        label_7->setText(QApplication::translate("AUserInterfaceClass", "Red Threshold", nullptr));
         ExportBox->setText(QApplication::translate("AUserInterfaceClass", "Export", nullptr));
         ScanDataClearButton->setText(QApplication::translate("AUserInterfaceClass", "Clear", nullptr));
         ScanBox->setText(QApplication::translate("AUserInterfaceClass", "Scan", nullptr));
