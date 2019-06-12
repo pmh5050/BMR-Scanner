@@ -39,7 +39,7 @@ AScanner::AScanner(int argc, char **argv)
 	ScanCamera->ReadCameraParameters(CAMERA_PARAMETER_FILE_PATH);
 	HCheckerBoard->ReadDetectorParameters(DETECTOR_PARAMETER_FILE_PATH);
 	VCheckerBoard->ReadDetectorParameters(DETECTOR_PARAMETER_FILE_PATH);
-	
+
 	UserInterface->show();
 	UserInterface->SetScannerReference(this);
 
@@ -99,9 +99,9 @@ void AScanner::DetectCheckerBoard(Mat& Frame)
 		{
 			// ArUco 함수를 호출하여 유효한 추정인지 여부를 '자세 추정 성공 여부 변수'로 저장합니다.
 			// 여부를 확인받는 것과 동시에 Rotation matrix와 Translate matrix의 주소를 인자로 넣어서 값을 저장합니다.
-			
+
 			bIsValidPose = aruco::estimatePoseCharucoBoard(CharucoCorners, CharucoIds, ObjectCheckerBoard->Charucoboard, ScanCamera->mCamMatrix, ScanCamera->mDistCoeffs, vRot, vTrs);
-			
+
 			/*
 			Mat Ids(CharucoIds);
 
@@ -134,11 +134,11 @@ void AScanner::UpdateCheckerBoardTransformMatrix()
 {
 	if (bIsValidPose)
 	{
-		double dTransformMatrix[4][4] = {0};
+		double dTransformMatrix[4][4] = { 0 };
 		dTransformMatrix[3][3] = 1.0f;
-		
+
 		Mat R;
-		
+
 		Rodrigues(vRot, R);
 		for (int i = 0; i < 3; i++)
 		{
@@ -189,16 +189,16 @@ void AScanner::DrawCheckerBoardAxis(Mat& Frame, EOffsetType OffsetType)
 			StandardDevReport << DeltaYaw << endl;
 			*/
 			Mat DeltaOffset = (TransformB2C * CenterPoint);
-			
+
 			double* OffsetPointer = DeltaOffset.ptr<double>(0);
 			for (int i = 0; i < 3; i++)
 			{
 				vTrs[i] = OffsetPointer[i];
 			}
-			
+
 			break;
 		}
-			
+
 		case EOffsetType::None:
 		{
 			break;
@@ -261,11 +261,11 @@ void AScanner::UpdateCheckerBoardLaserLine(Mat& Frame)
 				cout << "Pivot Point : " << PivotPoint << endl;
 #endif
 				ObjectCheckerBoard->SetLaserPivotPoint(PivotPoint);
-				
+
 				UserInterface->SetHLine(LineVector);
 				bIsHLineReady = true;
 			}
-			else if(ObjectCheckerBoard == VCheckerBoard)
+			else if (ObjectCheckerBoard == VCheckerBoard)
 			{
 				UserInterface->SetVLine(LineVector);
 				bIsVLineReady = true;
@@ -303,7 +303,7 @@ void AScanner::UpdateLineLaserPlaneParams()
 		double dVLineVector[3] = { 0 };
 		Mat bHLineParams = HCheckerBoard->GetLaserLineVector();
 		Mat bVLineParams = VCheckerBoard->GetLaserLineVector();
-		
+
 #if ASCANNER_DEBUG
 		cout << "H Params : " << bHLineParams << endl;
 		cout << "V Params : " << bVLineParams << endl;
@@ -342,7 +342,7 @@ void AScanner::UpdateLineLaserPlaneParams()
 #endif
 
 		Mat cPivotPoint = AScannerHelper::PointCoordinateTransform(bPivotPoint, HTransformMatrix);
-		
+
 #if ASCANNER_DEBUG
 		cout << "Ready for Plane params" << endl;
 		cout << "Normal Vector(Camera coordinate) : " << cNormalVector << endl;
@@ -406,8 +406,8 @@ void AScanner::ScanRunningUntilTimer()
 void AScanner::ScanRunning()
 {
 	Mat CurrentFrame;
-	const int TimeDelay = 3000;
-	const float ConfidenceFactor = 0.7f;
+	const int TimeDelay = 1000;
+	const int SettlingTime = 800;
 	ScanCamera->GetFrame(CurrentFrame);
 	SetObjectCheckerBoard('H');
 	DetectCheckerBoard(CurrentFrame);
@@ -421,37 +421,50 @@ void AScanner::ScanRunning()
 
 	// 최초 1회 Measurment 검출 이후에는 Motion Model로도 Scan을 진행하게 끔 합니다.
 	int DeltaTime = UserInterface->GetDeltaTime();
-	if (bIsValidPose || (DeltaTime > TimeDelay * ConfidenceFactor))
+	if (bIsValidPose || (DeltaTime > SettlingTime))
 	{
+		// 포즈가 검출될 경우만 수행됩니다.
 		UpdateCheckerBoardTransformMatrix();
 
-		ALinkedList* LinkedListPointer;
-		if (!bIsScanDataReady)
-		{
-			bIsScanDataReady = true;
-			LinkedListPointer = LinkedListHead;
-		}
-		else
-		{
-			LinkedListPointer = new ALinkedList();
-			LinkedListHead->InsertNextNode(LinkedListPointer);
-		}
-		AScanDataSet* ScanDataSet = LinkedListPointer->GetDataSetPtr();
-		Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
-		
-		int MarkerCount = MarkerIds.size();
 		int StepCount = UserInterface->GetStepCount();
 
-		cout << "DeltaTime : " << DeltaTime << endl;
-		cout << "MarkerCount : " << MarkerCount << endl;
-		cout << "StepCount : " << StepCount << endl;
+		static int PrevStepCount = 0;
+		static int CurrentStepCount;
+		CurrentStepCount = StepCount;
 
-		ScanDataSet->SetOrgImageData(CurrentFrame);
-		ScanDataSet->SetTransformB2C(TransformB2C);
-		ScanDataSet->SetDeltaTimeMs(DeltaTime);
-		ScanDataSet->SetDetectedMarkerCount(MarkerCount);
-		ScanDataSet->SetStepCount(StepCount);
+		int DeltaStepCount = CurrentStepCount - PrevStepCount;
+		PrevStepCount = CurrentStepCount;
 
+		if (DeltaStepCount != 0 || bIsValidPose)
+		{
+			ALinkedList* LinkedListPointer;
+			if (!bIsScanDataReady)
+			{
+				bIsScanDataReady = true;
+				LinkedListPointer = LinkedListHead;
+			}
+			else
+			{
+				LinkedListPointer = new ALinkedList();
+				LinkedListHead->InsertNextNode(LinkedListPointer);
+			}
+
+			AScanDataSet* ScanDataSet = LinkedListPointer->GetDataSetPtr();
+			Mat TransformB2C = ObjectCheckerBoard->GetTransformB2C();
+
+			int MarkerCount = MarkerIds.size();
+
+			cout << "DeltaTime : " << DeltaTime << endl;
+			cout << "MarkerCount : " << MarkerCount << endl;
+			cout << "StepCount : " << StepCount << endl;
+			cout << "IsValidPose : " << bIsValidPose << endl;
+			ScanDataSet->SetOrgImageData(CurrentFrame);
+			ScanDataSet->SetTransformB2C(TransformB2C);
+			ScanDataSet->SetIsValidPose(bIsValidPose);
+			ScanDataSet->SetDeltaTimeMs(DeltaTime);
+			ScanDataSet->SetDetectedMarkerCount(MarkerCount);
+			ScanDataSet->SetDeltaStepCount(DeltaStepCount);
+		}
 	}
 	else
 	{
@@ -474,7 +487,7 @@ void AScanner::StorePointCloud(string FileName)
 	if (bIsScanDataReady)
 	{
 #if ASCANNER_DEBUG
-		cout << "Line Laser plane : "  << LineLaser->GetPlaneParams() << endl;
+		cout << "Line Laser plane : " << LineLaser->GetPlaneParams() << endl;
 #endif
 		// 연산
 		ALinkedList* LinkedListPointer = LinkedListHead;
@@ -487,7 +500,7 @@ void AScanner::StorePointCloud(string FileName)
 			AScanDataSet* NodeScanDataSet = LinkedListPointer->GetDataSetPtr();
 			Mat NodeFrame = NodeScanDataSet->GetOrgImageData();
 			Mat GrayFrame = AScannerHelper::GetLineLaserFrame(NodeFrame, LineLaser->GetMinimumRedValueThreshold());
-			
+
 
 			imshow("Scan Node Frame", NodeFrame);
 			imshow("Scan Laser Frame", GrayFrame);
@@ -547,7 +560,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 #endif
 		return;
 	}
-	
+
 	if (bIsScanDataReady)
 	{
 #if ASCANNER_DEBUG
@@ -566,10 +579,10 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 
 		Mat OptimalCenterPoint = AScannerHelper::CalOptimalCenterPointVector(LinkedListHead);
 		cout << "회전 중심 좌표 : " << OptimalCenterPoint << endl;
-		
+
 		UpdateOptimalPoint(OptimalCenterPoint);
 
-		cout << "Center Point in (x, y, z) : " <<  CenterPoint << endl;
+		cout << "Center Point in (x, y, z) : " << CenterPoint << endl;
 		cout << "Optimal Point int (x, y, z) : " << OptimalPoint << endl;
 
 		while (true)
@@ -584,7 +597,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 				cout << "Please any key : ";
 				cin >> Dummy;
 				continue;
-			} 
+			}
 
 			Mat NodeFrame = NodeScanDataSet->GetOrgImageData();
 			Mat NodeLaserFrame = AScannerHelper::GetLineLaserFrame(NodeFrame, LineLaser->GetMinimumRedValueThreshold());
@@ -597,7 +610,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 			AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint, 8);
 			Mat ObjectTransformMatrixB2C = NodeScanDataSet->GetTransformB2C();
 			Mat TransformC2O = AScannerHelper::CalOptimalTransformMatrix(OptimalCenterPoint, ObjectTransformMatrixB2C, PivotTransformMatrixB2C); // Camera Coordinate to Opmial Coordinate
-			
+
 			Mat CameraPosition = AScannerHelper::GetTranslateMatrix(TransformC2O);
 
 			double* CameraPositionPointer = CameraPosition.ptr<double>(0);
@@ -660,9 +673,9 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 	}
 	else
 	{
-			cout << "Scan Data가 존재하지 않습니다." << endl;
+		cout << "Scan Data가 존재하지 않습니다." << endl;
 	}
-	
+
 }
 
 /**
@@ -697,7 +710,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 		Mat PivotTransformMatrixB2C = LinkedListHead->GetDataSetPtr()->GetTransformB2C();
 		cout << "PivotTransformMatrix : " << PivotTransformMatrixB2C << endl;
 
-		Mat OptimalCenterPoint = AScannerHelper::CalOptimalCenterPointVector(LinkedListHead);
+		Mat OptimalCenterPoint = AScannerHelper::CalOptimalCenterPointVectorOfValidPoseNode(LinkedListHead);
 		cout << "회전 중심 좌표 : " << OptimalCenterPoint << endl;
 
 		UpdateCenterPoint();
@@ -725,17 +738,16 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 
 			imshow("Node Frame", NodeFrame);
 			imshow("Node Laser Frame", NodeLaserFrame);
-			// char Key = waitKey(1);
+			char Key = waitKey(10);
 
 			// AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint);
 			AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint, WindowSize);
 			Mat ObjectTransformMatrixB2C = NodeScanDataSet->GetTransformB2C();
-			Mat TransformC2O = AScannerHelper::CalOptimalTransformMatrix(OptimalCenterPoint, ObjectTransformMatrixB2C, PivotTransformMatrixB2C); // Camera Coordinate to Opmial Coordinate
+			Mat TransformC2O = AScannerHelper::CalOptimalTransformMatrixUseKF(OptimalCenterPoint, NodeScanDataSet, UserInterface->OdometryCC, UserInterface->MeasurementCC, PivotTransformMatrixB2C); // Camera Coordinate to Opmial Coordinate
 
-			Mat CameraPosition = AScannerHelper::GetTranslateMatrix(TransformC2O);
-
-			double* CameraPositionPointer = CameraPosition.ptr<double>(0);
-			WriteFile << CameraPositionPointer[0] << " " << CameraPositionPointer[1] << " " << CameraPositionPointer[2] << endl;
+			// Mat CameraPosition = AScannerHelper::GetTranslateMatrix(TransformC2O);
+			// double* CameraPositionPointer = CameraPosition.ptr<double>(0);
+			// WriteFile << CameraPositionPointer[0] << " " << CameraPositionPointer[1] << " " << CameraPositionPointer[2] << endl;
 			for (int i = 0; i < HEIGHT_SIZE; i++)
 			{
 				if (FramePoint[i] != -1)

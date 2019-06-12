@@ -95,13 +95,25 @@ int AScanDataSet::GetDetectedMarkerCount()
 }
 
 /** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 저장합니다 */
-void AScanDataSet::SetStepCount(int NewStepCount)
+void AScanDataSet::SetDeltaStepCount(int NewDeltaStepCount)
 {
-	StepCount = NewStepCount;
+	DeltaStepCount = NewDeltaStepCount;
 }
 
 /** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 반환합니다 */
-int AScanDataSet::GetStepCount()
+int AScanDataSet::GetDeltaStepCount()
 {
-	return StepCount;
+	return DeltaStepCount;
+}
+
+/** 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 논리 형태로 저장합니다 */
+void AScanDataSet::SetIsValidPose(bool NewIsValidPose)
+{
+	bIsValidPose = NewIsValidPose;
+}
+
+/** 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 논리 형태로 반환합니다 */
+bool AScanDataSet::GetIsValidPose()
+{
+	return bIsValidPose;
 }

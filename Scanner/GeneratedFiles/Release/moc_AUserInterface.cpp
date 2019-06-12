@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_AUserInterface_t {
-    QByteArrayData data[42];
-    char stringdata0[658];
+    QByteArrayData data[43];
+    char stringdata0[682];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -72,7 +72,8 @@ QT_MOC_LITERAL(37, 513, 12), // "UpdateLimitZ"
 QT_MOC_LITERAL(38, 526, 36), // "UpdateOdometryCharacteristicC..."
 QT_MOC_LITERAL(39, 563, 39), // "UpdateMeasurementCharacterist..."
 QT_MOC_LITERAL(40, 603, 22), // "ClearReferenceScanData"
-QT_MOC_LITERAL(41, 626, 31) // "ProcessingFromReferenceScanData"
+QT_MOC_LITERAL(41, 626, 31), // "ProcessingFromReferenceScanData"
+QT_MOC_LITERAL(42, 658, 23) // "InitializeScanTransform"
 
     },
     "AUserInterface\0VisibleBoxSlot\0\0Index\0"
@@ -93,7 +94,8 @@ QT_MOC_LITERAL(41, 626, 31) // "ProcessingFromReferenceScanData"
     "UpdateOdometryCharacteristicConstant\0"
     "UpdateMeasurementCharacteristicConstant\0"
     "ClearReferenceScanData\0"
-    "ProcessingFromReferenceScanData"
+    "ProcessingFromReferenceScanData\0"
+    "InitializeScanTransform"
 };
 #undef QT_MOC_LITERAL
 
@@ -103,7 +105,7 @@ static const uint qt_meta_data_AUserInterface[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      27,   14, // methods
+      28,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -111,33 +113,34 @@ static const uint qt_meta_data_AUserInterface[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    2,  149,    2, 0x0a /* Public */,
-       5,    2,  154,    2, 0x0a /* Public */,
-       6,    2,  159,    2, 0x0a /* Public */,
-       7,    1,  164,    2, 0x0a /* Public */,
-      10,    1,  167,    2, 0x0a /* Public */,
-      12,    1,  170,    2, 0x0a /* Public */,
-      14,    0,  173,    2, 0x0a /* Public */,
-      15,    0,  174,    2, 0x0a /* Public */,
-      16,    1,  175,    2, 0x0a /* Public */,
-      18,    0,  178,    2, 0x0a /* Public */,
-      19,    0,  179,    2, 0x0a /* Public */,
-      20,    0,  180,    2, 0x0a /* Public */,
-      21,    0,  181,    2, 0x0a /* Public */,
-      22,    0,  182,    2, 0x0a /* Public */,
-      23,    0,  183,    2, 0x0a /* Public */,
-      24,    0,  184,    2, 0x0a /* Public */,
-      25,    0,  185,    2, 0x0a /* Public */,
-      26,    0,  186,    2, 0x0a /* Public */,
-      27,    2,  187,    2, 0x0a /* Public */,
-      32,    1,  192,    2, 0x0a /* Public */,
-      34,    1,  195,    2, 0x0a /* Public */,
-      35,    1,  198,    2, 0x0a /* Public */,
-      37,    1,  201,    2, 0x0a /* Public */,
-      38,    1,  204,    2, 0x0a /* Public */,
-      39,    1,  207,    2, 0x0a /* Public */,
-      40,    0,  210,    2, 0x0a /* Public */,
-      41,    0,  211,    2, 0x0a /* Public */,
+       1,    2,  154,    2, 0x0a /* Public */,
+       5,    2,  159,    2, 0x0a /* Public */,
+       6,    2,  164,    2, 0x0a /* Public */,
+       7,    1,  169,    2, 0x0a /* Public */,
+      10,    1,  172,    2, 0x0a /* Public */,
+      12,    1,  175,    2, 0x0a /* Public */,
+      14,    0,  178,    2, 0x0a /* Public */,
+      15,    0,  179,    2, 0x0a /* Public */,
+      16,    1,  180,    2, 0x0a /* Public */,
+      18,    0,  183,    2, 0x0a /* Public */,
+      19,    0,  184,    2, 0x0a /* Public */,
+      20,    0,  185,    2, 0x0a /* Public */,
+      21,    0,  186,    2, 0x0a /* Public */,
+      22,    0,  187,    2, 0x0a /* Public */,
+      23,    0,  188,    2, 0x0a /* Public */,
+      24,    0,  189,    2, 0x0a /* Public */,
+      25,    0,  190,    2, 0x0a /* Public */,
+      26,    0,  191,    2, 0x0a /* Public */,
+      27,    2,  192,    2, 0x0a /* Public */,
+      32,    1,  197,    2, 0x0a /* Public */,
+      34,    1,  200,    2, 0x0a /* Public */,
+      35,    1,  203,    2, 0x0a /* Public */,
+      37,    1,  206,    2, 0x0a /* Public */,
+      38,    1,  209,    2, 0x0a /* Public */,
+      39,    1,  212,    2, 0x0a /* Public */,
+      40,    0,  215,    2, 0x0a /* Public */,
+      41,    0,  216,    2, 0x0a /* Public */,
+      42,    0,  217,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void, QMetaType::Int, QMetaType::Bool,    3,    4,
@@ -165,6 +168,7 @@ static const uint qt_meta_data_AUserInterface[] = {
     QMetaType::Void, QMetaType::Int,   36,
     QMetaType::Void, QMetaType::Int,   36,
     QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
 
@@ -206,6 +210,7 @@ void AUserInterface::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         case 24: _t->UpdateMeasurementCharacteristicConstant((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 25: _t->ClearReferenceScanData(); break;
         case 26: _t->ProcessingFromReferenceScanData(); break;
+        case 27: _t->InitializeScanTransform(); break;
         default: ;
         }
     }
@@ -240,13 +245,13 @@ int AUserInterface::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 27)
+        if (_id < 28)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 27;
+        _id -= 28;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 27)
+        if (_id < 28)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 27;
+        _id -= 28;
     }
     return _id;
 }

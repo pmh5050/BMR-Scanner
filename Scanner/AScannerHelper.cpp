@@ -523,13 +523,13 @@ Mat AScannerHelper::CalOptimalCenterPointVector(ALinkedList* LinkedListHead)
 			NodeScanDataSet = NodeLinkedList->GetDataSetPtr();
 
 			// Kalman Filter
-			int CurrentStepCount = NodeScanDataSet->GetStepCount();
-			int DeltaStepCount = CurrentStepCount - PreviousStepCount;
-			PreviousStepCount = CurrentStepCount;
+			// int CurrentStepCount = NodeScanDataSet->GetStepCount();
+			// int DeltaStepCount = CurrentStepCount - PreviousStepCount;
+			// PreviousStepCount = CurrentStepCount;
 
 			if (NodeScanDataSet->GetDetectedMarkerCount() < 5) // Odometry Data가 우세함
 			{
-				Mat DeltaAngleMatrix = AScannerHelper::GetTurntableDeltaRotMatrix(DeltaStepCount);
+				Mat DeltaAngleMatrix = AScannerHelper::GetTurntableDeltaRotMatrix(1);
 				TransformMatrix = TransformMatrix * DeltaAngleMatrix;
 				NodeScanDataSet->SetTransformB2C(TransformMatrix);
 			}
@@ -586,6 +586,106 @@ Mat AScannerHelper::CalOptimalCenterPointVector(ALinkedList* LinkedListHead)
 	delete[] dAMatrix;
 
 	return OptimalPointVector.clone();
+}
+
+/** LinkedList의 Head Pointer를 입력받아 Pose Data가 Valid한 Node Sample을 대표하는 최적의 회전 중심 좌표 Vector (qx, qy, Qx, Qy, Qz)를 반환합니다. */
+Mat AScannerHelper::CalOptimalCenterPointVectorOfValidPoseNode(ALinkedList* LinkedListHead)
+{
+	int ValidPoseLinkedListLength = AScannerHelper::GetNumberOfValidPoseFrame(LinkedListHead);
+	double** dAMatrix;
+	double* dBMatrix;
+
+	// 동적 할당
+	dAMatrix = new double*[ValidPoseLinkedListLength * 3];
+	dBMatrix = new double[ValidPoseLinkedListLength * 3];
+	for (int row = 0; row < ValidPoseLinkedListLength * 3; row++)
+	{
+		dAMatrix[row] = new double[5];
+	}
+
+#if ASCAANERHELPER_DEBUG
+	cout << "동적 할당 완료" << endl;
+#endif
+
+	// Constrain : q(x, y, z) 에서 z의 값은 항상 0이므로, A Matrix 에서 3열은 효율을 위해 제외할 수 있음
+	ALinkedList* NodeLinkedList = LinkedListHead;
+	AScanDataSet* NodeScanDataSet;
+	Mat TransformMatrix;
+	double* TransformPtr;
+
+	int PreviousStepCount = 0;
+	for (int i = 0; i < ValidPoseLinkedListLength; i++)
+	{
+		NodeScanDataSet = NodeLinkedList->GetDataSetPtr();
+
+		// 현재 Node의 Frame이 Valid한 Pose를 갖는지 여부를 살핀 뒤
+		if (NodeScanDataSet->GetIsValidPose())
+		{
+#if ASCAANERHELPER_DEBUG
+			cout << "Valid Pose Node" << endl;
+#endif
+			// Valid한 경우 Global Optimization에 현재 Frame의 정보를 활용합니다.
+			for (int row = 0; row < 3; row++) // i : 행
+			{
+				TransformMatrix = NodeScanDataSet->GetTransformB2C();
+				TransformPtr = TransformMatrix.ptr<double>(row);
+				// A Matrix
+				for (int col = 0; col < 5; col++)
+				{
+					if (col < 3) // Identity matrix
+					{
+						if (row == col)
+						{
+							dAMatrix[row + i * 3][col] = 1.0f;
+						}
+						else
+						{
+							dAMatrix[row + i * 3][col] = 0.0f;
+						}
+					}
+					else // Rotation matrix
+					{
+						dAMatrix[row + i * 3][col] = -TransformPtr[col - 3];
+					}
+				}
+
+				// B Matrix
+				dBMatrix[row + i * 3] = TransformPtr[3];
+			}
+		}
+		else
+		{
+#if ASCAANERHELPER_DEBUG
+			cout << "InValid Pose Node" << endl;
+#endif
+			// Valid하지 않은 경우 Global Optimization에 현재 Frame의 정보를 활용하지 않습니다.
+			i = i - 1;
+		}
+
+		// Jump to Next Node
+		NodeLinkedList = NodeLinkedList->GetNextNodePtr();
+	}
+
+	int RowSize = ValidPoseLinkedListLength * 3;
+
+	Mat AMatrix = AScannerHelper::ArrayToMat(RowSize, 5, dAMatrix);
+	Mat BMatrix = AScannerHelper::ArrayToMat(RowSize, 1, dBMatrix);
+
+	Mat OptimalPointVector;
+
+	solve(AMatrix, BMatrix, OptimalPointVector, DECOMP_SVD);
+
+	// 반납
+	delete[] dBMatrix;
+
+	for (int row = 0; row < ValidPoseLinkedListLength * 3; row++)
+	{
+		delete[] dAMatrix[row];
+	}
+	delete[] dAMatrix;
+
+	return OptimalPointVector.clone();
+
 }
 
 /** 변환하고자 하는 Frame을 인자로 받은 뒤, Red Data Frame을 반환합니다. */
@@ -686,12 +786,47 @@ Mat AScannerHelper::CalOptimalTransformMatrix(Mat CenterPoint, Mat ObjectTransfo
 	return OptimalTransformMatrix.clone(); // Camera To O
 }
 
+/** Global optimazation 결과인 CenterPoint 값과, 기준이 되는 Transform matrix(B2C)와 Scan Data set, Odometry & Measurement 특성 상수를 입력받은 뒤, Kalman Filter를 적용하여 최적화 된 Transform matrix(C2O)를 반환합니다. */
+Mat AScannerHelper::CalOptimalTransformMatrixUseKF(Mat CenterPoint, class AScanDataSet* ScanDataSet, double OdometryCC, double MeasurementCC, Mat PivotTransformMatrixB2C)
+{
+	// 회전 중심 좌표를 Board Coordinate 형태의 Vector로 기록합니다.
+	static double* CenterPointAccessor = CenterPoint.ptr<double>(0);
+	static double dCenterPointInBoardCoordinate[3] = { CenterPointAccessor[3], CenterPointAccessor[4], 0.0f };
+	static Mat CenterPointInBoardCoordinate = Mat(3, 1, CV_64F, dCenterPointInBoardCoordinate).clone();
+
+	// Pivot Transform에 대한 정보를 기록합니다.
+	Mat PivotTranslateMatrix = AScannerHelper::GetTranslateMatrix(PivotTransformMatrixB2C.inv());
+
+	Mat PivotRotationMatrix = AScannerHelper::GetRotationMatrix(PivotTransformMatrixB2C);
+	Mat ObjectRotationMatrix = AScannerHelper::GetRotationMatrix(ScanDataSet->GetTransformB2C());
+
+	static double EstDeltaAngle = 0.0f; // 예측된 Delta angle
+	static double EstError = 0.0f;
+	double CurrentOdometrySTD = AScannerHelper::CalOdometrySTD(ScanDataSet->GetDeltaTimeMs(), OdometryCC);
+	double CurrentMeasurementSTD = AScannerHelper::CalMeasurementSTD(ScanDataSet->GetDetectedMarkerCount(), MeasurementCC);
+
+	// Odometry Data
+	EstDeltaAngle = EstDeltaAngle + ScanDataSet->GetDeltaStepCount() * CV_PI / 180.0f;
+	EstError = EstError + CurrentOdometrySTD;
+
+	double KalmanGain = AScannerHelper::CalKalmanGain(CurrentOdometrySTD, CurrentMeasurementSTD);
+
+	// Measurement Data
+	Mat DeltaAngleRotationMatrix = AScannerHelper::CalDeltaAngleMatrix(PivotRotationMatrix, ObjectRotationMatrix);
+	double MeasurmentDeltaAngle = AScannerHelper::CalYaw(DeltaAngleRotationMatrix);
+
+	EstDeltaAngle = EstDeltaAngle + KalmanGain * (MeasurmentDeltaAngle - EstDeltaAngle);
+	EstError = (1.0f - KalmanGain) * EstError;
+
+	Mat OptimalTranslateMatrix = DeltaAngleRotationMatrix * (PivotTranslateMatrix - CenterPointInBoardCoordinate) + CenterPointInBoardCoordinate; // Camera to O
+	Mat OptimalTransformMatrix = AScannerHelper::GetTransformMatrix(DeltaAngleRotationMatrix * PivotRotationMatrix.inv(), OptimalTranslateMatrix); // Camera to O
+
+	return OptimalTransformMatrix.clone(); // Camera To O
+}
+
 /** Pivot rotation matrix로 부터 Object rotation matrix까지의 Z축만의 회전 변환 행렬을 반환합니다. */
 Mat AScannerHelper::CalDeltaAngleMatrix(Mat PivotRotationMatrix, Mat ObjectRotationMatrix)
 {
-	double** dDeltaRotationMatrix;
-	AScannerHelper::SquareArrayDynamicAllocate(3, 3, dDeltaRotationMatrix);
-	
 	double PivotAngle = AScannerHelper::CalYaw(PivotRotationMatrix);
 	double ObjectAngle = AScannerHelper::CalYaw(ObjectRotationMatrix);
 
@@ -701,22 +836,7 @@ Mat AScannerHelper::CalDeltaAngleMatrix(Mat PivotRotationMatrix, Mat ObjectRotat
 		DeltaAngle += 2 * CV_PI;
 	}
 
-	for (int Row = 0; Row < 3; Row++)
-	{
-		for (int Col = 0; Col < 3; Col++)
-		{
-			dDeltaRotationMatrix[Row][Col] = 0.0f;
-		}
-	}
-
-	dDeltaRotationMatrix[0][0] = cos(DeltaAngle);
-	dDeltaRotationMatrix[0][1] = -sin(DeltaAngle);
-	dDeltaRotationMatrix[1][0] = sin(DeltaAngle);
-	dDeltaRotationMatrix[1][1] = cos(DeltaAngle);
-	
-	dDeltaRotationMatrix[2][2] = 1.0f;
-	Mat DeltaAngleRotationMatrix = AScannerHelper::ArrayToMat(3, 3, dDeltaRotationMatrix);
-	AScannerHelper::SquareArrayAllocateFree(3, 3, dDeltaRotationMatrix);
+	Mat DeltaAngleRotationMatrix = GetYawMatrix(DeltaAngle);
 	return DeltaAngleRotationMatrix.clone();
 }
 
@@ -913,4 +1033,104 @@ Mat AScannerHelper::GetTurntableDeltaRotMatrix(int StepCount)
 	AScannerHelper::SquareArrayAllocateFree(4, 4, DeltaRotationArray);
 
 	return TurntableDeltaRotMatrix;
+}
+
+/** Linked List에 포함된 Frame 중 Pose가 Valid한 Frame의 개수를 정수형태로 반환합니다. */
+int AScannerHelper::GetNumberOfValidPoseFrame(ALinkedList* LinkedList)
+{
+	int NumberOfValidPoseFrame = 0;
+	ALinkedList* CurrentLinkedList = LinkedList;
+	while (true)
+	{
+		AScanDataSet* ScanDataSet = CurrentLinkedList->GetDataSetPtr();
+		if (ScanDataSet->GetIsValidPose())
+		{
+			NumberOfValidPoseFrame++;
+		}
+		CurrentLinkedList = CurrentLinkedList->GetNextNodePtr();
+		if (CurrentLinkedList == nullptr)
+		{
+			break;
+		}
+	}
+
+	return NumberOfValidPoseFrame;
+
+}
+
+/** Yaw angle을 radian으로 입력받아 Z축에 대한 회전 변환 행렬을 만듭니다. */
+Mat AScannerHelper::GetYawMatrix(double YawAngle)
+{
+	double** dDeltaRotationMatrix;
+	AScannerHelper::SquareArrayDynamicAllocate(3, 3, dDeltaRotationMatrix);
+
+	if (YawAngle < 0.0f)
+	{
+		YawAngle += 2 * CV_PI;
+	}
+
+	for (int Row = 0; Row < 3; Row++)
+	{
+		for (int Col = 0; Col < 3; Col++)
+		{
+			dDeltaRotationMatrix[Row][Col] = 0.0f;
+		}
+	}
+
+	dDeltaRotationMatrix[0][0] = cos(YawAngle);
+	dDeltaRotationMatrix[0][1] = -sin(YawAngle);
+	dDeltaRotationMatrix[1][0] = sin(YawAngle);
+	dDeltaRotationMatrix[1][1] = cos(YawAngle);
+
+	dDeltaRotationMatrix[2][2] = 1.0f;
+	Mat DeltaAngleRotationMatrix = AScannerHelper::ArrayToMat(3, 3, dDeltaRotationMatrix);
+	AScannerHelper::SquareArrayAllocateFree(3, 3, dDeltaRotationMatrix);
+	return DeltaAngleRotationMatrix.clone();
+}
+
+/** 회전 명령을 한 뒤의 경과 시간과 Odometry 특성 상수 값을 입력받아 해당하는 Odometry model의 표준편차 값을 반환합니다. */
+double AScannerHelper::CalOdometrySTD(int DeltaTime, double OdometryCC)
+{
+	const double SettlingTimeSTD = 0.1f;
+	const int SettlingTime = 700;
+
+	double DecayPower = -OdometryCC * (DeltaTime - SettlingTime);
+	return SettlingTimeSTD * exp(DecayPower);
+}
+
+/** Frame에 검출된 Marker의 개수를 입력받아 해당하는 Measurement model의 표준편차 값을 반환합니다. */
+double AScannerHelper::CalMeasurementSTD(int DetectedMarker, double MeasurementCC)
+{
+	const double ThresholdSTD = 0.05f;
+	const int ThresholdMarkerNumber = 5;
+
+	if (DetectedMarker >= ThresholdMarkerNumber)
+	{
+		double DecayPower = -MeasurementCC * (DetectedMarker - ThresholdMarkerNumber);
+		return ThresholdSTD * exp(DecayPower);
+	}
+	else
+	{
+		return -1.0f;
+	}
+}
+
+/** Odometry 표준편차와 Measurement 표준편차를 입력받아 kalman Gain을 반환합니다. */
+double AScannerHelper::CalKalmanGain(double OdometrySTD, double MeasurementSTD)
+{
+	double KalmanGain;
+	if (MeasurementSTD != -1.0f) // Measurement data가 측정된 경우
+	{
+		KalmanGain = OdometrySTD / (OdometrySTD + MeasurementSTD);
+
+	}
+	else // Measurement data가 측정되지 않은 경우
+	{
+#if ASCAANERHELPER_DEBUG
+		cout << "Mea STD is Infinity Value" << endl;
+#endif
+		KalmanGain = 0.0f;
+	}
+
+	return KalmanGain;
 }

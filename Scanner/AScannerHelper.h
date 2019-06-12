@@ -43,7 +43,7 @@ public:
 	static int Clipping(int Value, int Min, int Max);
 	/** 두 Vector를 입력받아 외적을 합니다. */
 	static Mat CalCrossProduct(Mat Vector1, Mat Vector2);
-	/** 
+	/**
 	* PlaneParams와 RayVector를 입력받은 뒤, 교점을 계산하여 반환합니다.
 	* @param PlaneParams - Line Laser Plane을 Camera Coordinate로 표현한 Parameter들에 해당합니다.
 	* @param RayVector - Ray에 대한 방향 벡터를 Camera Coordinate로 표현한 Parameter들에 해당합니다.
@@ -75,7 +75,7 @@ public:
 	static Mat LineVectorCoordinateTransform(Mat LineVector, Mat TransformMatrix);
 	/** Frame과 MinimumRedthreshold 값을 인자로 주어서 Line laser만 표시된 Frame을 반환합니다. */
 	static Mat GetLineLaserFrame(Mat Frame, int MinimumRedthreshold);
-	/** 
+	/**
 	* Point set을 입력받아 (x, y) 좌표계의 Equation Parameter를 반환합니다.
 	* @return ay = bx + c 에서 Mat을 (b, a, c)로 구성하여 반환합니다.
 	*/
@@ -86,12 +86,19 @@ public:
 	static Mat GetTransformCenterPointToOrigin(ACheckerBoard* CheckerBoard);
 	/** LinkedList의 Head Pointer를 입력받아 전체 Sample을 대표하는 최적의 회전 중심 좌표 Vector (qx, qy, Qx, Qy, Qz)를 반환합니다. */
 	static Mat CalOptimalCenterPointVector(ALinkedList* LinkedListHead);
+	/** LinkedList의 Head Pointer를 입력받아 Pose Data가 Valid한 Node Sample을 대표하는 최적의 회전 중심 좌표 Vector (qx, qy, Qx, Qy, Qz)를 반환합니다. */
+	static Mat CalOptimalCenterPointVectorOfValidPoseNode(ALinkedList* LinkedListHead);
+
 	/** 변환하고자 하는 Frame을 인자로 받은 뒤, Red Data Frame을 반환합니다. */
 	static Mat CalRedFrame(Mat Frame);
 	/** 입력받은 Red Frame에 대해서 Gaussian Blur를 Row 단위로 적용한 뒤, 반환합니다. */
 	static Mat CalRowGaussianRedFrame(Mat RedFrame);
 	/** Global optimazation 결과인 CenterPoint 값과, 기준이 되는 Transform matrix(B2C)와 Update 대상인 Transform matrix(B2C)를 입력받은 뒤, 최적화 된 Transform matrix(C2O)를 반환합니다. */
 	static Mat CalOptimalTransformMatrix(Mat CenterPoint, Mat ObjectTransformMatrixB2C, Mat PivotTransformMatrixB2C);
+
+	/** Global optimazation 결과인 CenterPoint 값과, 기준이 되는 Transform matrix(B2C)와 Scan Data set, Odometry & Measurement 특성 상수를 입력받은 뒤, Kalman Filter를 적용하여 최적화 된 Transform matrix(C2O)를 반환합니다. */
+	static Mat CalOptimalTransformMatrixUseKF(Mat CenterPoint, class AScanDataSet* ScanDataSet, double OdometryCC, double MeasurementCC, Mat PivotTransformMatrixB2C);
+
 	/** Pivot rotation matrix로 부터 Object rotation matrix까지의 Z축만의 회전 변환 행렬을 반환합니다. */
 	static Mat CalDeltaAngleMatrix(Mat PivotRotationMatrix, Mat ObjectRotationMatrix);
 	/** 입력받은 Rotation matrix의 Z축 회전값(Yaw)을 계산한 뒤, Radian 형태로 반환해줍니다. */
@@ -110,6 +117,19 @@ public:
 	static Mat GetPlaneParameter(double PlaneParameterArray[4]);
 	/** Step Count를 입력받아 Turntable의 Delta Rotation Matrix를 Mat 형태로 반환합니다. */
 	static Mat GetTurntableDeltaRotMatrix(int StepCount);
+	/** Linked List에 포함된 Frame 중 Pose가 Valid한 Frame의 개수를 정수형태로 반환합니다. */
+	static int GetNumberOfValidPoseFrame(ALinkedList* LinkedList);
+
+	/** Yaw angle을 radian으로 입력받아 Z축에 대한 회전 변환 행렬을 만듭니다. */
+	static Mat GetYawMatrix(double YawAngle);
+
+	/** 회전 명령을 한 뒤의 경과 시간과 Odometry 특성 상수 값을 입력받아 해당하는 Odometry model의 표준편차 값을 반환합니다. */
+	static double CalOdometrySTD(int DeltaTime, double OdometryCC);
+	/** Frame에 검출된 Marker의 개수를 입력받아 해당하는 Measurement model의 표준편차 값을 반환합니다. */
+	static double CalMeasurementSTD(int DetectedMarker, double MeasurementCC);
+
+	/** Odometry 표준편차와 Measurement 표준편차를 입력받아 kalman Gain을 반환합니다. */
+	static double CalKalmanGain(double OdometrySTD, double MeasurementSTD);
 
 	/** Constructor Helper funtion */
 
@@ -125,7 +145,7 @@ public:
 	template <typename TData>
 	static Mat ArrayToMat(int ArrayRowSize, int ArrayColSize, TData* &Array);
 
-	/** 
+	/**
 	* Mat와 Row, Col Size를 입력받아 Array 형식으로 반환합니다.
 	* @param Array - 동적 할당이 선행된 Array pointer 입니다.
 	*/
@@ -176,7 +196,7 @@ Mat AScannerHelper::ArrayToMat(int ArrayRowSize, int ArrayColSize, TData** &Arra
 	{
 		ArrayClone = Mat(ArrayRowSize, ArrayColSize, CV_64F, ListArrayClone).clone();
 	}
-	else if(is_same<TData, int>::value == true)
+	else if (is_same<TData, int>::value == true)
 	{
 		ArrayClone = Mat(ArrayRowSize, ArrayColSize, CV_32S, ListArrayClone).clone();
 	}

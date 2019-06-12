@@ -15,7 +15,7 @@ public:
 	void DestroyNode();
 
 	/** Accessor funtion */
-	
+
 	/** 현재 Node의 Delta Angle 값을 반환합니다 */
 	float GetDeltaAngle();
 	/** 현재 Node의 Delta Time 값을 ms 단위로 반환합니다 */
@@ -39,10 +39,15 @@ public:
 	/** 현재 Node의 Image에서 인식된 Marker의 Count를 정수 형태로 반환합니다 */
 	int GetDetectedMarkerCount();
 
-	/** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 저장합니다 */
-	void SetStepCount(int NewStepCount);
-	/** 현재 Node에서 Step motor가 Step한 횟수를 정수 형태로 반환합니다 */
-	int GetStepCount();
+	/** 현재 Node에서 Step motor가 Step한 횟수의 변화량을 정수 형태로 저장합니다 */
+	void SetDeltaStepCount(int NewDeltaStepCount);
+	/** 현재 Node에서 Step motor가 Step한 횟수의 변화량을 정수 형태로 반환합니다 */
+	int GetDeltaStepCount();
+
+	/** 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 논리 형태로 저장합니다 */
+	void SetIsValidPose(bool NewIsValidPose);
+	/** 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 논리 형태로 반환합니다 */
+	bool GetIsValidPose();
 
 private:
 	float DeltaAngle; // 현재 frame의 회전각을 저장할 변수
@@ -51,5 +56,6 @@ private:
 	bool bIsReadyImgData; // 현재 Node가 Image 정보를 갖고 있는지 유무를 저장할 변수
 	Mat TransformB2C; // 현재 Node의 Frame이 갖고있는 B2C Transform matrix
 	int DetectedMarkerCount; // 현재 Node의 Image에서 인식된 Marker의 Count를 저장할 변수
-	int StepCount; // 현재 Node에서 Step motor가 Step한 횟수를 저장할 변수
+	int DeltaStepCount; // 현재 Node에서 Step motor가 Step한 횟수의 변화량을 저장할 변수
+	bool bIsValidPose; // 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 저장할 변수
 };

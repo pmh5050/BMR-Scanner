@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	AScanner Scanner(argc, argv);
 	Mat Frame;
 	Mat LaserFrame;
-	
+
 	while (Scanner.ScanCamera->IsFrameReady())
 	{
 		// Visible behavior
@@ -149,12 +149,9 @@ int main(int argc, char *argv[])
 		ScanVolume[Y_AXIS][RANGE_MINIMUM] = -0.05f;
 		ScanVolume[Y_AXIS][RANGE_MAXIMUM] = +0.05f;
 		ScanVolume[Z_AXIS][RANGE_MINIMUM] = 0.0015f;
-		ScanVolume[Z_AXIS][RANGE_MAXIMUM] = 0.100f; 
+		ScanVolume[Z_AXIS][RANGE_MAXIMUM] = 0.100f;
 
-		Scanner.StorePointCloud("LaserLNAA.txt", ScanVolume, 1);
-		Scanner.StorePointCloud("LaserLAA6.txt", ScanVolume, 6);
-		Scanner.StorePointCloud("LaserLAA9.txt", ScanVolume, 9);
-		Scanner.StorePointCloud("LaserLAA12.txt", ScanVolume, 12);
+		Scanner.StorePointCloud("KFPointCloud.txt", ScanVolume, 1);
 		cout << "모든 연산이 완료되었습니다." << endl;
 	}
 	else
