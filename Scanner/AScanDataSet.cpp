@@ -117,3 +117,15 @@ bool AScanDataSet::GetIsValidPose()
 {
 	return bIsValidPose;
 }
+
+/** 현재 시점에서 Scan이 시작된 이후로 경과된 시간을 정수형태로 저장합니다. */
+void AScanDataSet::SetElapsedTime(int NewElapsedTime)
+{
+	ElapsedTime = NewElapsedTime;
+}
+
+/** 현재 시점에서 Scan이 시작된 이후로 경과된 시간을 정수형태로 반환합니다. */
+int AScanDataSet::GetElpasedTime()
+{
+	return ElapsedTime;
+}

@@ -803,13 +803,22 @@ Mat AScannerHelper::CalOptimalTransformMatrixUseKF(Mat CenterPoint, class AScanD
 	static double EstDeltaAngle = 0.0f; // 예측된 Delta angle
 	static double EstError = 0.0f;
 	double CurrentOdometrySTD = AScannerHelper::CalOdometrySTD(ScanDataSet->GetDeltaTimeMs(), OdometryCC);
-	double CurrentMeasurementSTD = AScannerHelper::CalMeasurementSTD(ScanDataSet->GetDetectedMarkerCount(), MeasurementCC);
+	double CurrentMeasurementSTD;
+
+	if (ScanDataSet->GetIsValidPose()) // Checkerboard가 검출되었을 경우
+	{
+		CurrentMeasurementSTD = AScannerHelper::CalMeasurementSTD(ScanDataSet->GetDetectedMarkerCount(), MeasurementCC);
+	}
+	else
+	{
+		CurrentMeasurementSTD = -1.0f;
+	} 
 
 	// Odometry Data
-	EstDeltaAngle = EstDeltaAngle + 1.8f * ScanDataSet->GetDeltaStepCount() * CV_PI / 100.0f;
+	EstDeltaAngle = EstDeltaAngle + ScanDataSet->GetDeltaStepCount() * CV_PI / 100.0f;
 	EstError = EstError + CurrentOdometrySTD;
 
-	double KalmanGain = AScannerHelper::CalKalmanGain(CurrentOdometrySTD, CurrentMeasurementSTD);
+	double KalmanGain =  AScannerHelper::CalKalmanGain(CurrentOdometrySTD, CurrentMeasurementSTD);
 
 	// Measurement Data
 	Mat DeltaAngleRotationMatrix = AScannerHelper::CalDeltaAngleMatrix(PivotRotationMatrix, ObjectRotationMatrix);
@@ -822,7 +831,8 @@ Mat AScannerHelper::CalOptimalTransformMatrixUseKF(Mat CenterPoint, class AScanD
 #if ASCAANERHELPER_DEBUG
 	cout << "Est delta angle : " << EstDeltaAngle << endl;
 #endif
-	cout << "Est delta angle : " << EstDeltaAngle << endl;
+
+	ScanDataSet->SetDeltaAngle(EstDeltaAngle); // For Filtering Test
 
 	Mat OptimalTranslateMatrix = EstDeltaAngleRotationMatrix * (PivotTranslateMatrix - CenterPointInBoardCoordinate) + CenterPointInBoardCoordinate; // Camera to O
 	Mat OptimalTransformMatrix = AScannerHelper::GetTransformMatrix(EstDeltaAngleRotationMatrix * PivotRotationMatrix.inv(), OptimalTranslateMatrix); // Camera to O

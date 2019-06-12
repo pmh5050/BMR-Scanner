@@ -61,6 +61,8 @@ public:
 	double LimitZ; // Scan Volume에 참조되는 수직 방향 최대 길이
 	double OdometryCC; // Odometry model의 분산 특성에 참조되는 상수 [0:1]
 	double MeasurementCC; // Measurement model의 분산 특성에 참조되는 상수 [0:1]
+	
+	QTime WorldTimeManager; // 프로그램 수행 시간 측정을 위한 Public Timer
 
 	/** AScanner의 포인터를 받아 참조 변수에 등록합니다. */
 	void SetScannerReference(AScanner* ScannerReference);
@@ -70,6 +72,9 @@ public:
 
 	/** 현재까지 Step motor의 Step 횟수를 반환합니다. */
 	int GetStepCount();
+
+	
+	
 
 public slots:
 	/** Visible Box Widget의 활성화 정보가 변경될 경우 호출되며, 활성화 정보 변수를 수정합니다. */
@@ -142,6 +147,7 @@ public slots:
 	
 	/** Scanner의 초기 Transform 정보를 등록합니다. */
 	void InitializeScanTransform();
+
 private:
 	AScanner* Scanner; // AScanner의 주소를 보관할 Reference 변수
 	QButtonGroup* VisibleButtonGroup; // Visible Button들을 관리할 Button Group Pointer
@@ -160,6 +166,7 @@ private:
 	bool bIsTimerRunning; // 현재 Timer가 동작하고 있는지 유무를 저장할 변수
 
 	int StepCount; // 현재까지 Step motor의 Step 횟수를 저장할 변수
+
 public:
 
 	bool bToggleTableFlag;

@@ -416,6 +416,7 @@ void AScanner::ScanRunning()
 	{
 		cout << "Scan" << endl;
 		UserInterface->TimerInit(TimeDelay);
+		UserInterface->WorldTimeManager.start();
 
 	}
 
@@ -464,6 +465,9 @@ void AScanner::ScanRunning()
 			ScanDataSet->SetDeltaTimeMs(DeltaTime);
 			ScanDataSet->SetDetectedMarkerCount(MarkerCount);
 			ScanDataSet->SetDeltaStepCount(DeltaStepCount);
+
+			// Additional option ( for task test )
+			ScanDataSet->SetElapsedTime(UserInterface->WorldTimeManager.elapsed());
 		}
 	}
 	else
@@ -686,7 +690,17 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2])
 void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int WindowSize)
 {
 	ofstream WriteFile(FileName.data());
+	ofstream FilterFile("FilterData.txt");
+
 	if (!WriteFile.is_open())
+	{
+#if ASCANNER_DEBUG
+		cout << "Data 기록을 위한 파일을 open할 수 없습니다." << endl;
+#endif
+		return;
+	}
+
+	if (!FilterFile.is_open())
 	{
 #if ASCANNER_DEBUG
 		cout << "Data 기록을 위한 파일을 open할 수 없습니다." << endl;
@@ -723,6 +737,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 		{
 			AScanDataSet* NodeScanDataSet = LinkedListPointer->GetDataSetPtr();
 
+			/* 
 			// 예외처리
 			if (NodeScanDataSet->IsReadyImgData() == false)
 			{
@@ -732,10 +747,13 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 				cin >> Dummy;
 				continue;
 			}
+			*/
 
 			Mat NodeFrame = NodeScanDataSet->GetOrgImageData();
 			Mat NodeLaserFrame = AScannerHelper::GetLineLaserFrame(NodeFrame, LineLaser->GetMinimumRedValueThreshold());
-
+			
+			// UserInterface->UpdateLabelFromFrame(ELabelType::RGBFrame, NodeFrame.clone());
+			// UserInterface->UpdateLabelFromFrame(ELabelType::LaserFrame, NodeLaserFrame.clone());
 			imshow("Node Frame", NodeFrame);
 			imshow("Node Laser Frame", NodeLaserFrame);
 			char Key = waitKey(10);
@@ -743,7 +761,31 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 			// AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint);
 			AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint, WindowSize);
 			Mat ObjectTransformMatrixB2C = NodeScanDataSet->GetTransformB2C();
+			
 			Mat TransformC2O = AScannerHelper::CalOptimalTransformMatrixUseKF(OptimalCenterPoint, NodeScanDataSet, UserInterface->OdometryCC, UserInterface->MeasurementCC, PivotTransformMatrixB2C); // Camera Coordinate to Opmial Coordinate
+			
+			/* No KF data 저장용
+			if (NodeScanDataSet->GetIsValidPose())
+			{
+				FilterFile << NodeScanDataSet->GetElpasedTime() << " " << NodeScanDataSet->GetDeltaAngle() << endl;
+
+			}
+			else
+			{
+				FilterFile << NodeScanDataSet->GetElpasedTime() << " " << 0.0f << endl;
+
+				if (LinkedListPointer->GetNextNodePtr() != nullptr)
+				{
+					LinkedListPointer = LinkedListPointer->GetNextNodePtr();
+					continue;
+				}
+				else
+				{
+					break;
+				}
+			}
+			*/
+			FilterFile << NodeScanDataSet->GetElpasedTime() << " " << NodeScanDataSet->GetDeltaAngle() << endl;
 
 			// Mat CameraPosition = AScannerHelper::GetTranslateMatrix(TransformC2O);
 			// double* CameraPositionPointer = CameraPosition.ptr<double>(0);
@@ -784,7 +826,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 						}
 					}
 
-					if (true)
+					if (bIsVolumeIn)
 					{
 						// Point가 입력받은 Volume 내에 위치합니다.
 						WriteFile << BoardPosition[0] << " " << BoardPosition[1] << " " << BoardPosition[2] << endl;
@@ -801,6 +843,7 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 			}
 		}
 		WriteFile.close();
+		FilterFile.close();
 		delete[] FramePoint;
 		delete[] dRayVector;
 	}

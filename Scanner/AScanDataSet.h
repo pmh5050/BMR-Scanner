@@ -49,6 +49,12 @@ public:
 	/** 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 논리 형태로 반환합니다 */
 	bool GetIsValidPose();
 
+	/** 현재 시점에서 Scan이 시작된 이후로 경과된 시간을 정수형태로 저장합니다. */
+	void SetElapsedTime(int NewElapsedTime);
+
+	/** 현재 시점에서 Scan이 시작된 이후로 경과된 시간을 정수형태로 반환합니다. */
+	int GetElpasedTime();
+
 private:
 	float DeltaAngle; // 현재 frame의 회전각을 저장할 변수
 	int DeltaTimeMs; // 현재 frame의 경과시간을 저장할 변수
@@ -58,4 +64,6 @@ private:
 	int DetectedMarkerCount; // 현재 Node의 Image에서 인식된 Marker의 Count를 저장할 변수
 	int DeltaStepCount; // 현재 Node에서 Step motor가 Step한 횟수의 변화량을 저장할 변수
 	bool bIsValidPose; // 현재 Node에서 Frame이 Checkerboard에 대한 Pose를 정상적으로 검출했는 지 여부를 저장할 변수
+
+	int ElapsedTime; // Scan이 시작된 이후로 경과된 시간을 저장할 변수
 };
