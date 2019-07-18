@@ -18,13 +18,11 @@ class AScanner
 {
 public:
 	AScanner(int argc, char **argv);
-	~AScanner();
+
 	/** Frame을 입력받아 검출한 CheckerBoard의 축을 표시합니다. */
 	void DrawCheckerBoardAxis(Mat& Frame);
-
 	/** Frame을 입력받아 검출한 CheckerBoard의 축을 Offset Option을 고려하여 표시합니다. */
 	void DrawCheckerBoardAxis(Mat& Frame, EOffsetType OffsetType);
-
 	/** Scan data로부터 Point Cloud 정보를 계산한 뒤 해당 FileName에 저장합니다 */
 	void StorePointCloud(string FileName);
 	/**
@@ -38,10 +36,15 @@ public:
 	* @param WindowSize - Anti-Aliasing에 사용될 Windows의 크기에 해당합니다.
 	*/
 	void StorePointCloud(string FileName, double ScanVolume[3][2], int WindowSize);
+	/**
+	* Scan data로부터 Point Cloud 정보를 계산한 뒤 해당 FileName에 저장합니다, 추가로 ScanVolume을 입력받아서 해당 범위를 벗어난 경우 Point에서 열외합니다.
+	* @param Scan Volume - 첫 번째 index는 Axis에 해당하며, 두 번째 index의 경우 0이면 minimum, 1이면 maximum에 해당합니다.
+	* @param WindowSize - Anti-Aliasing에 사용될 Windows의 크기에 해당합니다.
+	*/
+	void StorePointCloudWithoutKF(string FileName, double ScanVolume[3][2], int WindowSize);
 
 	/** Scan을 1회 진행합니다. (타이머를 수행하지 않습니다.) */
 	void ScanRunningUntilTimer();
-
 	/** Scan을 진행합니다. */
 	void ScanRunning();
 
@@ -74,10 +77,8 @@ public:
 	void UpdateCenterPoint();
 	/** Pseudo Inverse의 결과를 인자로 받아서 현재 Checkerboard의 회전 중심좌표 값을 Update 합니다. */
 	void UpdateOptimalPoint(Mat NewOptimalPoint);
-
 	/** AScanner의 Linked List에 포함된 Data를 초기화합니다. */
 	void ClearScanData();
-
 	/** 현재 Object Checkerboard의 Yaw angle을 반환합니다. */
 	double GetYawAngle();
 

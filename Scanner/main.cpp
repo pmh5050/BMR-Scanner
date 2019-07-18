@@ -154,7 +154,13 @@ int main(int argc, char *argv[])
 		ScanVolume[Z_AXIS][RANGE_MINIMUM] = 0.015f;
 		ScanVolume[Z_AXIS][RANGE_MAXIMUM] = 0.150f;
 
-		Scanner.StorePointCloud("KFPointCloud.txt", ScanVolume, 3);
+		QTime ProcessTimeManager;
+		ProcessTimeManager.start();
+		Scanner.StorePointCloud("B_KFPointCloud.txt", ScanVolume, 3);
+		cout << ProcessTimeManager.elapsed() << endl;
+		ProcessTimeManager.start();
+		Scanner.StorePointCloud("B_NKFPointCloud.txt", ScanVolume, 3);
+		cout << ProcessTimeManager.elapsed() << endl;
 		cout << "모든 연산이 완료되었습니다." << endl;
 	}
 	else

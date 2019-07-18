@@ -24,8 +24,6 @@
 #define RANGE_MINIMUM 0
 #define RANGE_MAXIMUM 1
 
-static ofstream StandardDevReport("NoiseCameraDev2.txt");
-
 AScanner::AScanner(int argc, char **argv)
 {
 	Application = new QApplication(argc, argv);
@@ -51,10 +49,6 @@ AScanner::AScanner(int argc, char **argv)
 	UpdateCenterPoint();
 }
 
-AScanner::~AScanner()
-{
-	StandardDevReport.close();
-}
 /**
 * 검출의 대상이 되는 CheckerBoard를 설정합니다.
 * @param NewObjectCheckerBoardType - 'H'일 경우 H Checkerboard가 검출의 대상이 되며, 'V'일 경우 V Checkerboard가 검출의 대상이 됩니다.
@@ -737,7 +731,6 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 		{
 			AScanDataSet* NodeScanDataSet = LinkedListPointer->GetDataSetPtr();
 
-			/* 
 			// 예외처리
 			if (NodeScanDataSet->IsReadyImgData() == false)
 			{
@@ -747,7 +740,6 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 				cin >> Dummy;
 				continue;
 			}
-			*/
 
 			Mat NodeFrame = NodeScanDataSet->GetOrgImageData();
 			Mat NodeLaserFrame = AScannerHelper::GetLineLaserFrame(NodeFrame, LineLaser->GetMinimumRedValueThreshold());
@@ -786,6 +778,174 @@ void AScanner::StorePointCloud(string FileName, double ScanVolume[3][2], int Win
 			}
 			*/
 			FilterFile << NodeScanDataSet->GetElpasedTime() << " " << NodeScanDataSet->GetDeltaAngle() << endl;
+
+			// Mat CameraPosition = AScannerHelper::GetTranslateMatrix(TransformC2O);
+			// double* CameraPositionPointer = CameraPosition.ptr<double>(0);
+			// WriteFile << CameraPositionPointer[0] << " " << CameraPositionPointer[1] << " " << CameraPositionPointer[2] << endl;
+			for (int i = 0; i < HEIGHT_SIZE; i++)
+			{
+				if (FramePoint[i] != -1)
+				{
+					AScannerHelper::CalRayFVector(FramePoint[i], i, ScanCamera, dRayVector); // 실수형 계산
+					// Mat TransformC2B = NodeScanDataSet->GetTransformB2C().inv(); // Default Option
+
+					Mat RayVector(1, 3, CV_64F, dRayVector);
+					Mat cIntersectionPoint = AScannerHelper::CalIntersectionPoint(LineLaser->GetPlaneParams(), RayVector);
+					// Mat bIntersectionPoint = ScannerHelper->PointCoordinateTransform(cIntersectionPoint, TransformC2B); // Default Option
+					Mat bIntersectionPoint = AScannerHelper::PointCoordinateTransform(cIntersectionPoint, TransformC2O); // Global Optimization Option
+
+					Mat IntersectionPoint = AScannerHelper::GetOffsetCoordinate(EOffsetType::CenterPoint, bIntersectionPoint, CenterPoint, OptimalPoint);
+#if ASCANNER_DEBUG
+					cout << "cIntersection point [" << i << "] : " << cIntersectionPoint << endl;
+					cout << "bIntersection point [" << i << "] : " << bIntersectionPoint << endl;
+#endif
+					IntersectionPointPointer = IntersectionPoint.ptr<double>(0);
+					for (int j = 0; j < 3; j++)
+					{
+						BoardPosition[j] = IntersectionPointPointer[j];
+					}
+
+					bool bIsVolumeIn = true;
+					for (int j = 0; j < 3; j++)
+					{
+						if (ScanVolume[j][RANGE_MINIMUM] <= BoardPosition[j] && BoardPosition[j] <= ScanVolume[j][RANGE_MAXIMUM])
+						{
+							// 해당 Axis의 조건을 만족합니다.
+						}
+						else
+						{
+							bIsVolumeIn = false;
+						}
+					}
+
+					if (bIsVolumeIn)
+					{
+						// Point가 입력받은 Volume 내에 위치합니다.
+						WriteFile << BoardPosition[0] << " " << BoardPosition[1] << " " << BoardPosition[2] << endl;
+					}
+				}
+			}
+			if (LinkedListPointer->GetNextNodePtr() != nullptr)
+			{
+				LinkedListPointer = LinkedListPointer->GetNextNodePtr();
+			}
+			else
+			{
+				break;
+			}
+		}
+		WriteFile.close();
+		FilterFile.close();
+		delete[] FramePoint;
+		delete[] dRayVector;
+	}
+	else
+	{
+		cout << "Scan Data가 존재하지 않습니다." << endl;
+	}
+}
+
+/**
+* Scan data로부터 Point Cloud 정보를 계산한 뒤 해당 FileName에 저장합니다, 추가로 ScanVolume을 입력받아서 해당 범위를 벗어난 경우 Point에서 열외합니다.
+* @param Scan Volume - 첫 번째 index는 Axis에 해당하며, 두 번째 index의 경우 0이면 minimum, 1이면 maximum에 해당합니다.
+* @param WindowSize - Anti-Aliasing에 사용될 Windows의 크기에 해당합니다.
+*/
+void AScanner::StorePointCloudWithoutKF(string FileName, double ScanVolume[3][2], int WindowSize)
+{
+	ofstream WriteFile(FileName.data());
+	ofstream FilterFile("NoFilterData.txt");
+
+	if (!WriteFile.is_open())
+	{
+#if ASCANNER_DEBUG
+		cout << "Data 기록을 위한 파일을 open할 수 없습니다." << endl;
+#endif
+		return;
+	}
+
+	if (!FilterFile.is_open())
+	{
+#if ASCANNER_DEBUG
+		cout << "Data 기록을 위한 파일을 open할 수 없습니다." << endl;
+#endif
+		return;
+	}
+
+	if (bIsScanDataReady)
+	{
+#if ASCANNER_DEBUG
+		cout << "Line Laser plane : " << LineLaser->GetPlaneParams() << endl;
+#endif
+		// 연산
+		ALinkedList* LinkedListPointer = LinkedListHead;
+		// int* FramePoint = new int[HEIGHT_SIZE]; // 할당
+		double* FramePoint = new double[HEIGHT_SIZE]; // 할당
+		double* dRayVector = new double[3]; // 할당
+		double* IntersectionPointPointer;
+		double BoardPosition[3]; // (x, y, z) in CheckerBoard Coordinate
+
+		Mat PivotTransformMatrixB2C = LinkedListHead->GetDataSetPtr()->GetTransformB2C();
+		cout << "PivotTransformMatrix : " << PivotTransformMatrixB2C << endl;
+
+		Mat OptimalCenterPoint = AScannerHelper::CalOptimalCenterPointVectorOfValidPoseNode(LinkedListHead);
+		cout << "회전 중심 좌표 : " << OptimalCenterPoint << endl;
+
+		UpdateCenterPoint();
+		UpdateOptimalPoint(OptimalCenterPoint);
+
+		cout << "Center Point in (x, y, z) : " << CenterPoint << endl;
+		cout << "Optimal Point int (x, y, z) : " << OptimalPoint << endl;
+
+		while (true)
+		{
+			AScanDataSet* NodeScanDataSet = LinkedListPointer->GetDataSetPtr();
+
+			// 예외처리
+			if (NodeScanDataSet->IsReadyImgData() == false)
+			{
+				int Dummy;
+				cout << "Empty Data Detected!" << endl;
+				cout << "Please any key : ";
+				cin >> Dummy;
+				continue;
+			}
+
+			Mat NodeFrame = NodeScanDataSet->GetOrgImageData();
+			Mat NodeLaserFrame = AScannerHelper::GetLineLaserFrame(NodeFrame, LineLaser->GetMinimumRedValueThreshold());
+
+			// UserInterface->UpdateLabelFromFrame(ELabelType::RGBFrame, NodeFrame.clone());
+			// UserInterface->UpdateLabelFromFrame(ELabelType::LaserFrame, NodeLaserFrame.clone());
+			imshow("Node Frame", NodeFrame);
+			imshow("Node Laser Frame", NodeLaserFrame);
+			char Key = waitKey(10);
+
+			// AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint);
+			AScannerHelper::CalcRedPointUseGaussianBlur(NodeFrame, LineLaser->GetMinimumRedValueThreshold(), FramePoint, WindowSize);
+			Mat ObjectTransformMatrixB2C = NodeScanDataSet->GetTransformB2C();
+
+			Mat TransformC2O = AScannerHelper::CalOptimalTransformMatrix(OptimalCenterPoint, ObjectTransformMatrixB2C, PivotTransformMatrixB2C);
+			// Mat TransformC2O = AScannerHelper::CalOptimalTransformMatrixUseKF(OptimalCenterPoint, NodeScanDataSet, UserInterface->OdometryCC, UserInterface->MeasurementCC, PivotTransformMatrixB2C); // Camera Coordinate to Opmial Coordinate
+
+			// No KF data 저장용
+			if (NodeScanDataSet->GetIsValidPose())
+			{
+				FilterFile << NodeScanDataSet->GetElpasedTime() << " " << NodeScanDataSet->GetDeltaAngle() << endl;
+			}
+			else
+			{
+				FilterFile << NodeScanDataSet->GetElpasedTime() << " " << 0.0f << endl;
+
+				if (LinkedListPointer->GetNextNodePtr() != nullptr)
+				{
+					LinkedListPointer = LinkedListPointer->GetNextNodePtr();
+					continue;
+				}
+				else
+				{
+					break;
+				}
+			}
+			// FilterFile << NodeScanDataSet->GetElpasedTime() << " " << NodeScanDataSet->GetDeltaAngle() << endl;
 
 			// Mat CameraPosition = AScannerHelper::GetTranslateMatrix(TransformC2O);
 			// double* CameraPositionPointer = CameraPosition.ptr<double>(0);
